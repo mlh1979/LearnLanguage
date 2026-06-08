@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4a6cf7">
     <title id="app-title">English Learning</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+    <link rel="apple-touch-icon" href="./icon-192.png">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; min-height: 100vh; color: #333; }
@@ -54,6 +60,9 @@
         .data-btns.hidden { display: none; }
         .data-btn { padding: 10px 20px; border: 1px solid #d0d0d0; border-radius: 8px; background: #fafafa; cursor: pointer; font-size: 13px; color: #555; white-space: pre-line; text-align: center; }
         .data-btn:hover { background: #eef1ff; border-color: #4a6cf7; }
+        /* Update notification */
+        #update-banner { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #4a6cf7; color: white; padding: 12px 20px; text-align: center; z-index: 9999; }
+        #update-banner button { background: white; color: #4a6cf7; border: none; padding: 6px 16px; border-radius: 6px; font-weight: 600; margin-left: 10px; cursor: pointer; }
         @media (max-width: 480px) { #app { max-width: 100%; } .word-display { font-size: 28px; } .translate-ms, .translate-zh { font-size: 18px; } .action-btn { min-width: 100px; padding: 10px 16px; font-size: 14px; } }
     </style>
 </head>
@@ -179,9 +188,14 @@
     </div>
 </div>
 
+<!-- Update banner -->
+<div id="update-banner">
+    New version available! <button onclick="installUpdate()">Update Now</button>
+</div>
+
 <script>
 // ========= VERSION NUMBER - change this once, everywhere updates =========
-const APP_VERSION = 'v1.0.0.11';
+const APP_VERSION = 'v1.0.0.12';
 document.title = 'English Learning (' + APP_VERSION + ')';
 // ==========================================================================
 
@@ -299,47 +313,43 @@ const LOCAL_DICT = {
     "zenith": {"malay": "puncak", "chinese": "顶点", "definition": "the highest point reached"},
 };
 
-// In-memory data store (no localStorage)
-let users = {};
-
-function getUsers() { return users; }
-function getUser(name) { return users[name] || null; }
-function createUser(name) { users[name] = { name, words: [] }; }
-function deleteUser(name) { delete users[name]; }
-function addWord(username, entry) {
-    if (!users[username]) return;
-    users[username].words.push(entry);
+// Data layer (localStorage)
+function getUsers() {
+    try { return JSON.parse(localStorage.getItem('el_users') || '{}'); } catch { return {}; }
 }
-
-// Auto-download JSON on every save
-function autoDownload(name) {
-    const data = getUser(name);
-    if (!data) return;
-    downloadFile(data, `${name}.json`);
+function saveUsers(data) { localStorage.setItem('el_users', JSON.stringify(data)); }
+function getUser(name) { return getUsers()[name] || null; }
+function createUser(name) {
+    const u = getUsers();
+    u[name] = { name, words: [] };
+    saveUsers(u);
+}
+function deleteUser(name) {
+    const u = getUsers();
+    delete u[name];
+    saveUsers(u);
+}
+function addWord(username, entry) {
+    const u = getUsers();
+    if (!u[username]) return;
+    u[username].words.push(entry);
+    saveUsers(u);
 }
 
 function getFileTimestamp() {
     const d = new Date();
-    return d.getFullYear() +
-        String(d.getMonth()+1).padStart(2,'0') +
-        String(d.getDate()).padStart(2,'0') + '_' +
-        String(d.getHours()).padStart(2,'0') +
-        String(d.getMinutes()).padStart(2,'0') +
-        String(d.getSeconds()).padStart(2,'0');
+    return d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0') + '_' + String(d.getHours()).padStart(2,'0') + String(d.getMinutes()).padStart(2,'0') + String(d.getSeconds()).padStart(2,'0');
 }
 
 function downloadFile(data, filename) {
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
-    a.href = url;
+    a.href = URL.createObjectURL(blob);
     a.download = filename;
     a.click();
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(a.href);
 }
 
-// Manual export: download as name_yyyyMMdd_24hmmss.json
 function exportUser() {
     if (!currentUser) { alert('Please select a user first!'); return; }
     const data = getUser(currentUser);
@@ -347,7 +357,6 @@ function exportUser() {
     downloadFile(data, `${currentUser}_${getFileTimestamp()}.json`);
 }
 
-// Import from file
 function importUser(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -355,20 +364,25 @@ function importUser(event) {
     reader.onload = function(e) {
         try {
             const data = JSON.parse(e.target.result);
-            if (!data.name || !Array.isArray(data.words)) {
-                alert('Invalid file format!');
-                return;
-            }
-            users[data.name] = data;
+            if (!data.name || !Array.isArray(data.words)) { alert('Invalid file format!'); return; }
+            const u = getUsers();
+            u[data.name] = data;
+            saveUsers(u);
             currentUser = data.name;
             updateMenuButtons();
-            loadUserList();
-        } catch {
-            alert('Failed to read file!');
-        }
+        } catch { alert('Failed to read file!'); }
     };
     reader.readAsText(file);
     event.target.value = '';
+}
+
+// Restore last user on load
+function autoRestore() {
+    const last = localStorage.getItem('el_last_user');
+    if (last && getUser(last)) {
+        currentUser = last;
+        updateMenuButtons();
+    }
 }
 
 // State
@@ -403,22 +417,23 @@ function createUserAction() {
     if (getUser(name)) { alert('User already exists!'); return; }
     createUser(name);
     currentUser = name;
+    localStorage.setItem('el_last_user', name);
     document.getElementById('new-name').value = '';
     updateMenuButtons();
-    autoDownload(name);
     showPage('menu');
 }
 
 // Select User
 function loadUserList() {
+    const u = getUsers();
     const list = document.getElementById('user-list');
-    const names = Object.keys(users);
+    const names = Object.keys(u);
     if (!names.length) {
-        list.innerHTML = '<p class="no-users">No users found. Import a user file first.</p>';
+        list.innerHTML = '<p class="no-users">No users found. Create one first.</p>';
         return;
     }
     list.innerHTML = names.map(n => {
-        const count = users[n].words.length;
+        const count = u[n].words.length;
         return `<button class="user-btn" onclick="selectUser('${n}')">${n} <span>(${count} words)</span>
             <button class="delete-btn" onclick="event.stopPropagation();deleteUserAction('${n}')">✕</button>
         </button>`;
@@ -427,13 +442,14 @@ function loadUserList() {
 
 function selectUser(name) {
     currentUser = name;
+    localStorage.setItem('el_last_user', name);
     showPage('menu');
 }
 
 function deleteUserAction(name) {
     if (!confirm(`Delete user "${name}" and all their data?`)) return;
     deleteUser(name);
-    if (currentUser === name) currentUser = null;
+    if (currentUser === name) { currentUser = null; localStorage.removeItem('el_last_user'); }
     loadUserList();
 }
 
@@ -455,7 +471,6 @@ function doLearn() {
     document.getElementById('learn-definition').textContent = entry.definition;
 }
 
-// Save current learned word (called internally before next word or back)
 function saveCurrentWord() {
     if (currentWord && currentUser) {
         const entry = LOCAL_DICT[currentWord];
@@ -466,7 +481,6 @@ function saveCurrentWord() {
             definition: entry.definition,
             date: new Date().toISOString().slice(0, 19).replace('T', ' ')
         });
-        autoDownload(currentUser);
     }
 }
 
@@ -560,13 +574,52 @@ document.getElementById('new-name').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') createUserAction();
 });
 
-// Export/Import wrapper
 window.exportUser = exportUser;
 window.importUser = importUser;
 
-// Init: version badge + UI
+// Init
+autoRestore();
 document.getElementById('version-badge').textContent = '(' + APP_VERSION + ')';
 updateMenuButtons();
+
+// PWA: Register service worker + update notification
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('./service-worker.js').then(function(reg) {
+            // Check for update every time page loads
+            reg.update();
+        });
+    });
+
+    // When a new service worker is ready, show update banner
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+        // Page was reloaded by SW - just refresh
+    });
+
+    // Detect waiting update
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(function(reg) {
+            reg.addEventListener('updatefound', function() {
+                const newWorker = reg.installing;
+                newWorker.addEventListener('statechange', function() {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        // New version available, show banner
+                        document.getElementById('update-banner').style.display = 'block';
+                    }
+                });
+            });
+        });
+    }
+}
+
+function installUpdate() {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.ready.then(function(reg) {
+            reg.waiting.postMessage('skipWaiting');
+        });
+    }
+    window.location.reload();
+}
 </script>
 </body>
 </html>
