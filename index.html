@@ -343,12 +343,11 @@ function downloadFile(data, filename) {
     URL.revokeObjectURL(url);
 }
 
-// Auto-export: download as name_default.json to device
-function autoExport(name) {
+// Auto-save: only save to localStorage, no download popup
+function autoSave(name) {
     const data = getUser(name);
     if (!data) return;
     localStorage.setItem(DEFAULT_KEY, JSON.stringify(data));
-    downloadFile(data, `${name}_default.json`);
 }
 
 // Manual export: download as name_yyyyMMdd_24hmmss.json
@@ -438,7 +437,7 @@ function createUserAction() {
     currentUser = name;
     document.getElementById('new-name').value = '';
     updateMenuButtons();
-    autoExport(name);
+    autoSave(name);
     showPage('menu');
 }
 
@@ -498,7 +497,7 @@ function saveAndBack() {
             definition: entry.definition,
             date: new Date().toISOString().slice(0, 19).replace('T', ' ')
         });
-        autoExport(currentUser);
+        autoSave(currentUser);
     }
     showPage('menu');
 }
