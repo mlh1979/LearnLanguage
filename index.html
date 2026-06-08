@@ -183,7 +183,6 @@
 // ========= VERSION NUMBER - change this once, everywhere updates =========
 const APP_VERSION = 'v1.0.0.7';
 document.title = 'English Learning (' + APP_VERSION + ')';
-document.getElementById('version-badge').textContent = '(' + APP_VERSION + ')';
 // ==========================================================================
 
 const LOCAL_DICT = {
@@ -610,6 +609,7 @@ function ensureDefaultProfile() {
 if (!autoImport()) {
     ensureDefaultProfile();
 }
+document.getElementById('version-badge').textContent = '(' + APP_VERSION + ')';
 updateMenuButtons();
 </script>
 </body>
