@@ -181,7 +181,7 @@
 
 <script>
 // ========= VERSION NUMBER - change this once, everywhere updates =========
-const APP_VERSION = 'v1.0.0.7';
+const APP_VERSION = 'v1.0.0.8';
 document.title = 'English Learning (' + APP_VERSION + ')';
 // ==========================================================================
 
@@ -315,6 +315,7 @@ function createUser(name) {
     users[name] = { name, words: [] };
     saveUsers(users);
 }
+function deleteUser(name) {
     const users = getUsers();
     delete users[name];
     saveUsers(users);
