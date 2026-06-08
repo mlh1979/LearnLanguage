@@ -181,7 +181,7 @@
 
 <script>
 // ========= VERSION NUMBER - change this once, everywhere updates =========
-const APP_VERSION = 'v1.0.0.10';
+const APP_VERSION = 'v1.0.0.11';
 document.title = 'English Learning (' + APP_VERSION + ')';
 // ==========================================================================
 
@@ -299,32 +299,23 @@ const LOCAL_DICT = {
     "zenith": {"malay": "puncak", "chinese": "顶点", "definition": "the highest point reached"},
 };
 
-// Data layer (localStorage + file)
-const DEFAULT_KEY = 'el_default_data';
+// In-memory data store (no localStorage)
+let users = {};
 
-function getUsers() {
-    try { return JSON.parse(localStorage.getItem('el_users') || '{}'); } catch { return {}; }
-}
-function saveUsers(users) { localStorage.setItem('el_users', JSON.stringify(users)); }
-function getUser(name) {
-    const users = getUsers();
-    return users[name] || null;
-}
-function createUser(name) {
-    const users = getUsers();
-    users[name] = { name, words: [] };
-    saveUsers(users);
-}
-function deleteUser(name) {
-    const users = getUsers();
-    delete users[name];
-    saveUsers(users);
-}
+function getUsers() { return users; }
+function getUser(name) { return users[name] || null; }
+function createUser(name) { users[name] = { name, words: [] }; }
+function deleteUser(name) { delete users[name]; }
 function addWord(username, entry) {
-    const users = getUsers();
     if (!users[username]) return;
     users[username].words.push(entry);
-    saveUsers(users);
+}
+
+// Auto-download JSON on every save
+function autoDownload(name) {
+    const data = getUser(name);
+    if (!data) return;
+    downloadFile(data, `${name}.json`);
 }
 
 function getFileTimestamp() {
@@ -348,13 +339,6 @@ function downloadFile(data, filename) {
     URL.revokeObjectURL(url);
 }
 
-// Auto-save: only save to localStorage, no download popup
-function autoSave(name) {
-    const data = getUser(name);
-    if (!data) return;
-    localStorage.setItem(DEFAULT_KEY, JSON.stringify(data));
-}
-
 // Manual export: download as name_yyyyMMdd_24hmmss.json
 function exportUser() {
     if (!currentUser) { alert('Please select a user first!'); return; }
@@ -375,37 +359,16 @@ function importUser(event) {
                 alert('Invalid file format!');
                 return;
             }
-            const users = getUsers();
             users[data.name] = data;
-            saveUsers(users);
             currentUser = data.name;
-            localStorage.setItem(DEFAULT_KEY, JSON.stringify(data));
             updateMenuButtons();
-            alert(`Imported user "${data.name}" with ${data.words.length} words!`);
+            loadUserList();
         } catch {
             alert('Failed to read file!');
         }
     };
     reader.readAsText(file);
     event.target.value = '';
-}
-
-// Auto-import on page load: try to restore from default data
-function autoImport() {
-    const saved = localStorage.getItem(DEFAULT_KEY);
-    if (!saved) return false;
-    try {
-        const data = JSON.parse(saved);
-        if (!data.name || !Array.isArray(data.words)) return false;
-        const users = getUsers();
-        users[data.name] = data;
-        saveUsers(users);
-        currentUser = data.name;
-        updateMenuButtons();
-        return true;
-    } catch {
-        return false;
-    }
 }
 
 // State
@@ -442,17 +405,16 @@ function createUserAction() {
     currentUser = name;
     document.getElementById('new-name').value = '';
     updateMenuButtons();
-    autoSave(name);
+    autoDownload(name);
     showPage('menu');
 }
 
 // Select User
 function loadUserList() {
-    const users = getUsers();
     const list = document.getElementById('user-list');
     const names = Object.keys(users);
     if (!names.length) {
-        list.innerHTML = '<p class="no-users">No users found. Create one first.</p>';
+        list.innerHTML = '<p class="no-users">No users found. Import a user file first.</p>';
         return;
     }
     list.innerHTML = names.map(n => {
@@ -465,7 +427,6 @@ function loadUserList() {
 
 function selectUser(name) {
     currentUser = name;
-    autoSave(name);
     showPage('menu');
 }
 
@@ -505,7 +466,7 @@ function saveCurrentWord() {
             definition: entry.definition,
             date: new Date().toISOString().slice(0, 19).replace('T', ' ')
         });
-        autoSave(currentUser);
+        autoDownload(currentUser);
     }
 }
 
@@ -603,21 +564,7 @@ document.getElementById('new-name').addEventListener('keydown', function(e) {
 window.exportUser = exportUser;
 window.importUser = importUser;
 
-// Auto-create default profile if no profiles exist
-function ensureDefaultProfile() {
-    const users = getUsers();
-    if (Object.keys(users).length === 0) {
-        users['Guest'] = { name: 'Guest', words: [] };
-        saveUsers(users);
-        currentUser = 'Guest';
-        autoSave('Guest');
-    }
-}
-
-// Init: try auto-import, then ensure default profile, then always update UI
-if (!autoImport()) {
-    ensureDefaultProfile();
-}
+// Init: version badge + UI
 document.getElementById('version-badge').textContent = '(' + APP_VERSION + ')';
 updateMenuButtons();
 </script>
