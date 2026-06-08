@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Learning</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; min-height: 100vh; color: #333; }
+        #app { max-width: 500px; margin: 0 auto; min-height: 100vh; background: #fff; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        #app-header { background: linear-gradient(135deg, #4a6cf7, #6366f1); color: white; padding: 20px; text-align: center; }
+        #app-header h1 { font-size: 24px; font-weight: 700; }
+        #user-status { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+        .page { padding: 20px; min-height: 400px; }
+        .hidden { display: none !important; }
+        .btn-grid { display: flex; flex-direction: column; gap: 12px; padding: 20px 0; }
+        .menu-btn { background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 12px; padding: 16px 20px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .menu-btn:hover:not(:disabled) { background: #eef1ff; border-color: #4a6cf7; transform: translateY(-1px); }
+        .menu-btn:active:not(:disabled) { transform: translateY(0); }
+        .menu-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-en { font-size: 16px; font-weight: 600; color: #333; }
+        .btn-zh { font-size: 13px; color: #6366f1; }
+        .btn-ms { font-size: 12px; color: #888; font-style: italic; }
+        .quit-btn .btn-en { color: #e74c3c; }
+        h2 { font-size: 22px; text-align: center; margin-bottom: 4px; }
+        .subtitle { text-align: center; color: #888; font-size: 14px; margin-bottom: 30px; }
+        input[type="text"] { width: 100%; padding: 14px 16px; font-size: 18px; border: 2px solid #e0e0e0; border-radius: 10px; text-align: center; outline: none; transition: border-color 0.2s; }
+        input[type="text"]:focus { border-color: #4a6cf7; }
+        .btn-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; justify-content: center; }
+        .action-btn { padding: 12px 24px; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; background: #4a6cf7; color: white; transition: background 0.2s; min-width: 120px; }
+        .action-btn:hover { background: #3b5de7; }
+        .action-btn.primary { background: #10b981; }
+        .action-btn.primary:hover { background: #059669; }
+        .action-btn.secondary { background: #6b7280; }
+        .action-btn.secondary:hover { background: #4b5563; }
+        .back-btn { width: 100%; margin-top: 10px; }
+        #user-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .user-btn { background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 10px; padding: 14px 20px; cursor: pointer; font-size: 16px; font-weight: 500; text-align: left; transition: all 0.2s; width: 100%; }
+        .user-btn:hover { background: #eef1ff; border-color: #4a6cf7; }
+        .user-btn span { color: #888; font-size: 13px; font-weight: 400; }
+        .no-users { text-align: center; color: #888; padding: 20px; }
+        .status-badge { text-align: center; font-size: 12px; color: #888; margin-bottom: 10px; }
+        .word-display { font-size: 36px; font-weight: 700; text-align: center; padding: 20px 0 10px; color: #1a1a2e; }
+        .translate-ms { font-size: 22px; text-align: center; color: #10b981; padding: 8px 0; }
+        .translate-zh { font-size: 22px; text-align: center; color: #3b82f6; padding: 4px 0 12px; }
+        .definition { font-size: 14px; text-align: center; color: #666; padding: 10px 16px; background: #f8f9fa; border-radius: 8px; margin-bottom: 16px; line-height: 1.5; }
+        .answer-box { background: #fef3c7; border-radius: 10px; padding: 16px 20px; font-size: 18px; text-align: center; line-height: 1.6; margin: 12px 0; }
+        .counter { text-align: center; font-size: 14px; color: #888; margin-bottom: 5px; }
+        .time-info { text-align: center; font-size: 12px; color: #aaa; margin: 8px 0 0; }
+        #empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 60px; }
+        .empty-msg { font-size: 20px; text-align: center; color: #555; line-height: 1.6; margin-bottom: 24px; white-space: pre-line; }
+        .delete-btn { background: none; border: none; color: #e74c3c; font-size: 12px; cursor: pointer; padding: 2px 6px; margin-left: 8px; }
+        @media (max-width: 480px) { #app { max-width: 100%; } .word-display { font-size: 28px; } .translate-ms, .translate-zh { font-size: 18px; } .action-btn { min-width: 100px; padding: 10px 16px; font-size: 14px; } }
+    </style>
+</head>
+<body>
+<div id="app">
+    <header id="app-header">
+        <h1>English Learning</h1>
+        <div id="user-status">No user selected</div>
+    </header>
+
+    <!-- Menu -->
+    <div id="menu" class="page">
+        <div class="btn-grid">
+            <button class="menu-btn" onclick="showPage('create-user')">
+                <span class="btn-en">Create New User</span>
+                <span class="btn-zh">创建用户</span>
+                <span class="btn-ms">Cipta Pengguna</span>
+            </button>
+            <button class="menu-btn" onclick="showPage('select-user')">
+                <span class="btn-en">Select User</span>
+                <span class="btn-zh">选择用户</span>
+                <span class="btn-ms">Pilih Pengguna</span>
+            </button>
+            <button class="menu-btn" id="btn-learn" onclick="doLearn()" disabled>
+                <span class="btn-en">Learn a Word</span>
+                <span class="btn-zh">学习单词</span>
+                <span class="btn-ms">Belajar Perkataan</span>
+            </button>
+            <button class="menu-btn" id="btn-test" onclick="doTest()" disabled>
+                <span class="btn-en">Test</span>
+                <span class="btn-zh">测试</span>
+                <span class="btn-ms">Ujian</span>
+            </button>
+            <button class="menu-btn" id="btn-review" onclick="doReview()" disabled>
+                <span class="btn-en">Review Today</span>
+                <span class="btn-zh">今日复习</span>
+                <span class="btn-ms">Semak Hari Ini</span>
+            </button>
+            <button class="menu-btn quit-btn" onclick="alert('Close the browser tab to quit.')">
+                <span class="btn-en">Quit</span>
+                <span class="btn-zh">退出</span>
+                <span class="btn-ms">Keluar</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Create User -->
+    <div id="create-user" class="page hidden">
+        <h2>Create New User</h2>
+        <p class="subtitle">创建用户 / Cipta Pengguna</p>
+        <input type="text" id="new-name" placeholder="Enter your name" onkeydown="if(event.key==='Enter')createUser()">
+        <div class="btn-row">
+            <button class="action-btn" onclick="createUser()">Create</button>
+            <button class="action-btn secondary" onclick="showPage('menu')">Back</button>
+        </div>
+    </div>
+
+    <!-- Select User -->
+    <div id="select-user" class="page hidden">
+        <h2>Select User</h2>
+        <p class="subtitle">选择用户 / Pilih Pengguna</p>
+        <div id="user-list"></div>
+        <div class="btn-row">
+            <button class="action-btn secondary" onclick="showPage('menu')">Back</button>
+        </div>
+    </div>
+
+    <!-- Learn -->
+    <div id="learn" class="page hidden">
+        <div id="learn-word" class="word-display"></div>
+        <div id="learn-malay" class="translate-ms"></div>
+        <div id="learn-chinese" class="translate-zh"></div>
+        <div id="learn-definition" class="definition"></div>
+        <div class="btn-row">
+            <button class="action-btn" onclick="speakWord(currentWord)">Play Sound</button>
+            <button class="action-btn" onclick="doLearn()">Next Word</button>
+            <button class="action-btn primary" onclick="saveAndBack()">Save & Back</button>
+        </div>
+        <button class="action-btn secondary back-btn" onclick="showPage('menu')">Back to Menu</button>
+    </div>
+
+    <!-- Test -->
+    <div id="test" class="page hidden">
+        <div class="status-badge">Test</div>
+        <div id="test-word" class="word-display"></div>
+        <div id="test-answer" class="answer-box hidden"></div>
+        <div class="btn-row">
+            <button class="action-btn" onclick="speakWord(testData.word)">Play Sound</button>
+            <button class="action-btn" onclick="showTestAnswer()">Show Answer</button>
+        </div>
+        <div class="btn-row">
+            <button class="action-btn primary" onclick="doTest()">Next Word</button>
+            <button class="action-btn secondary" onclick="showPage('menu')">Back to Menu</button>
+        </div>
+    </div>
+
+    <!-- Review Today -->
+    <div id="review" class="page hidden">
+        <div class="status-badge">Review Today</div>
+        <div id="review-counter" class="counter"></div>
+        <div id="review-word" class="word-display"></div>
+        <div id="review-answer" class="answer-box hidden"></div>
+        <div id="review-time" class="time-info"></div>
+        <div class="btn-row">
+            <button class="action-btn" onclick="speakWord(reviewWords[reviewIndex].word)">Play Sound</button>
+            <button class="action-btn" onclick="showReviewAnswer()">Show Answer</button>
+        </div>
+        <div class="btn-row">
+            <button class="action-btn primary" id="btn-review-next" onclick="reviewNext()">Next Word</button>
+            <button class="action-btn secondary" onclick="showPage('menu')">Back to Menu</button>
+        </div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="empty" class="page hidden">
+        <div id="empty-msg" class="empty-msg"></div>
+        <button class="action-btn secondary" onclick="showPage('menu')">Back to Menu</button>
+    </div>
+</div>
+
+<script>
+const LOCAL_DICT = {
+    "abandon": {"malay": "meninggalkan", "chinese": "放弃", "definition": "to leave something or someone behind"},
+    "absorb": {"malay": "menyerap", "chinese": "吸收", "definition": "to take in or soak up"},
+    "accent": {"malay": "loghat", "chinese": "口音", "definition": "a distinctive way of pronunciation"},
+    "achieve": {"malay": "mencapai", "chinese": "实现", "definition": "to successfully bring about a result"},
+    "anchor": {"malay": "sauh", "chinese": "锚", "definition": "a heavy object used to moor a vessel"},
+    "balance": {"malay": "keseimbangan", "chinese": "平衡", "definition": "an even distribution of weight"},
+    "beacon": {"malay": "lampu suar", "chinese": "灯塔", "definition": "a light or signal for guidance"},
+    "blossom": {"malay": "berbunga", "chinese": "开花", "definition": "to produce flowers; to flourish"},
+    "brilliant": {"malay": "cemerlang", "chinese": "杰出的", "definition": "very bright or intelligent"},
+    "breeze": {"malay": "angin sepoi-sepoi", "chinese": "微风", "definition": "a gentle wind"},
+    "capture": {"malay": "menangkap", "chinese": "捕获", "definition": "to take into one's possession"},
+    "castle": {"malay": "istana", "chinese": "城堡", "definition": "a large fortified building"},
+    "candid": {"malay": "jujur", "chinese": "坦率的", "definition": "truthful and straightforward"},
+    "courage": {"malay": "keberanian", "chinese": "勇气", "definition": "the ability to face danger or fear"},
+    "charm": {"malay": "daya tarik", "chinese": "魅力", "definition": "the power of pleasing or attracting"},
+    "dawn": {"malay": "subuh", "chinese": "黎明", "definition": "the first appearance of light in the sky"},
+    "debate": {"malay": "perbahasan", "chinese": "辩论", "definition": "a formal discussion on a topic"},
+    "desire": {"malay": "keinginan", "chinese": "渴望", "definition": "a strong feeling of wanting"},
+    "determine": {"malay": "menentukan", "chinese": "决定", "definition": "to decide or settle conclusively"},
+    "diverse": {"malay": "pelbagai", "chinese": "多样的", "definition": "showing a great deal of variety"},
+    "eager": {"malay": "ghairah", "chinese": "热切的", "definition": "enthusiastic and impatient"},
+    "eclipse": {"malay": "gerhana", "chinese": "日食/月食", "definition": "an obscuring of light from one body by another"},
+    "elegant": {"malay": "anggun", "chinese": "优雅的", "definition": "graceful and stylish"},
+    "eloquent": {"malay": "fasih", "chinese": "雄辩的", "definition": "fluent and persuasive in speech"},
+    "embrace": {"malay": "merangkul", "chinese": "拥抱", "definition": "to hold closely; to accept willingly"},
+    "fable": {"malay": "dongeng", "chinese": "寓言", "definition": "a short story conveying a moral"},
+    "fierce": {"malay": "ganas", "chinese": "激烈的", "definition": "having a violent intensity"},
+    "flourish": {"malay": "berkembang", "chinese": "繁荣", "definition": "to grow or develop in a healthy way"},
+    "frozen": {"malay": "beku", "chinese": "冻结的", "definition": "turned into ice"},
+    "gentle": {"malay": "lembut", "chinese": "温柔的", "definition": "mild in temperament; kind"},
+    "glow": {"malay": "bersinar", "chinese": "发光", "definition": "to give out steady light"},
+    "grace": {"malay": "anggun", "chinese": "优雅", "definition": "smooth elegance of movement"},
+    "grateful": {"malay": "bersyukur", "chinese": "感恩的", "definition": "feeling or showing appreciation"},
+    "genuine": {"malay": "tulen", "chinese": "真正的", "definition": "truly what it claims to be"},
+    "harmony": {"malay": "keharmonian", "chinese": "和谐", "definition": "agreement or concord"},
+    "harvest": {"malay": "tuaian", "chinese": "收获", "definition": "the process of gathering crops"},
+    "honor": {"malay": "hormat", "chinese": "荣誉", "definition": "high respect; great esteem"},
+    "horizon": {"malay": "ufuk", "chinese": "地平线", "definition": "the line where earth and sky appear to meet"},
+    "humble": {"malay": "rendah hati", "chinese": "谦逊的", "definition": "having a modest opinion of oneself"},
+    "ignite": {"malay": "menyalakan", "chinese": "点燃", "definition": "to set on fire; to arouse"},
+    "illusion": {"malay": "ilusi", "chinese": "幻觉", "definition": "a false idea or belief"},
+    "imagine": {"malay": "membayangkan", "chinese": "想象", "definition": "to form a mental image"},
+    "inspire": {"malay": "mengilhamkan", "chinese": "启发", "definition": "to fill with the urge to do something"},
+    "island": {"malay": "pulau", "chinese": "岛屿", "definition": "a piece of land surrounded by water"},
+    "jade": {"malay": "jed", "chinese": "玉石", "definition": "a hard green stone used for ornaments"},
+    "jewel": {"malay": "permata", "chinese": "宝石", "definition": "a precious stone"},
+    "journey": {"malay": "perjalanan", "chinese": "旅程", "definition": "an act of travelling from one place to another"},
+    "jungle": {"malay": "hutan", "chinese": "丛林", "definition": "a dense forest in a tropical area"},
+    "justice": {"malay": "keadilan", "chinese": "正义", "definition": "just behavior or treatment"},
+    "kindle": {"malay": "menyalakan", "chinese": "点燃", "definition": "to start a fire; to arouse emotion"},
+    "kingdom": {"malay": "kerajaan", "chinese": "王国", "definition": "a country ruled by a king or queen"},
+    "knowledge": {"malay": "pengetahuan", "chinese": "知识", "definition": "facts and information acquired by experience"},
+    "launch": {"malay": "melancarkan", "chinese": "发射", "definition": "to set in motion; to start"},
+    "legend": {"malay": "lagenda", "chinese": "传说", "definition": "a traditional story regarded as historical"},
+    "liberty": {"malay": "kebebasan", "chinese": "自由", "definition": "the state of being free"},
+    "linger": {"malay": "berpanjangan", "chinese": "徘徊", "definition": "to stay in a place longer than necessary"},
+    "luminous": {"malay": "bersinar", "chinese": "发光的", "definition": "giving off light; bright"},
+    "magnificent": {"malay": "megah", "chinese": "壮丽的", "definition": "impressively beautiful or elaborate"},
+    "marvel": {"malay": "keajaiban", "chinese": "奇迹", "definition": "a wonderful or astonishing thing"},
+    "meadow": {"malay": "padang rumput", "chinese": "草地", "definition": "a field with grass and wildflowers"},
+    "measure": {"malay": "mengukur", "chinese": "测量", "definition": "to ascertain the size or amount"},
+    "mirror": {"malay": "cermin", "chinese": "镜子", "definition": "a surface that reflects an image"},
+    "narrative": {"malay": "naratif", "chinese": "叙事", "definition": "a spoken or written account of events"},
+    "native": {"malay": "asal", "chinese": "本地的", "definition": "belonging to a place by birth"},
+    "navigate": {"malay": "navigasi", "chinese": "导航", "definition": "to plan and direct a route"},
+    "noble": {"malay": "mulia", "chinese": "高尚的", "definition": "having high moral qualities"},
+    "observe": {"malay": "memerhati", "chinese": "观察", "definition": "to notice or perceive something"},
+    "oasis": {"malay": "oasis", "chinese": "绿洲", "definition": "a fertile spot in a desert"},
+    "opinion": {"malay": "pendapat", "chinese": "意见", "definition": "a view or judgment about something"},
+    "orbit": {"malay": "orbit", "chinese": "轨道", "definition": "the curved path of a celestial object"},
+    "palace": {"malay": "istana", "chinese": "宫殿", "definition": "the official residence of a ruler"},
+    "paradise": {"malay": "syurga", "chinese": "天堂", "definition": "an ideal or perfect place"},
+    "patient": {"malay": "sabar", "chinese": "耐心的", "definition": "able to accept delay without anger"},
+    "ponder": {"malay": "merenung", "chinese": "沉思", "definition": "to think about something carefully"},
+    "pulse": {"malay": "denyutan nadi", "chinese": "脉搏", "definition": "a rhythmic throbbing of arteries"},
+    "quest": {"malay": "pencarian", "chinese": "探索", "definition": "a long search for something"},
+    "quiet": {"malay": "senyap", "chinese": "安静的", "definition": "making little or no noise"},
+    "radiant": {"malay": "berseri", "chinese": "容光焕发的", "definition": "sending out light; glowing"},
+    "random": {"malay": "rawak", "chinese": "随机的", "definition": "made without pattern or purpose"},
+    "reason": {"malay": "sebab", "chinese": "原因", "definition": "a cause or explanation"},
+    "rebel": {"malay": "pemberontak", "chinese": "反叛者", "definition": "a person who resists authority"},
+    "resilient": {"malay": "tabah", "chinese": "坚韧的", "definition": "able to recover quickly from difficulty"},
+    "safety": {"malay": "keselamatan", "chinese": "安全", "definition": "the condition of being protected from danger"},
+    "sculpt": {"malay": "memahat", "chinese": "雕刻", "definition": "to create a sculpture"},
+    "shadow": {"malay": "bayang", "chinese": "影子", "definition": "a dark area produced by a body blocking light"},
+    "sincere": {"malay": "ikhlas", "chinese": "真诚的", "definition": "free from pretense or deceit"},
+    "spark": {"malay": "percikan api", "chinese": "火花", "definition": "a small fiery particle"},
+    "talent": {"malay": "bakat", "chinese": "天赋", "definition": "a natural aptitude or skill"},
+    "thrive": {"malay": "berkembang maju", "chinese": "茁壮成长", "definition": "to grow or develop well"},
+    "tide": {"malay": "pasang surut", "chinese": "潮汐", "definition": "the regular rise and fall of the sea"},
+    "tranquil": {"malay": "tenang", "chinese": "宁静的", "definition": "free from disturbance; calm"},
+    "triumph": {"malay": "kemenangan", "chinese": "胜利", "definition": "a great victory or achievement"},
+    "unique": {"malay": "unik", "chinese": "独特的", "definition": "being the only one of its kind"},
+    "unity": {"malay": "perpaduan", "chinese": "团结", "definition": "the state of being united"},
+    "universe": {"malay": "alam semesta", "chinese": "宇宙", "definition": "all existing matter and space"},
+    "uplift": {"malay": "menaikkan semangat", "chinese": "鼓舞", "definition": "to elevate or inspire"},
+    "urgent": {"malay": "segera", "chinese": "紧急的", "definition": "requiring immediate action"},
+    "valley": {"malay": "lembah", "chinese": "山谷", "definition": "a low area between hills or mountains"},
+    "velvet": {"malay": "baldu", "chinese": "天鹅绒", "definition": "a closely woven fabric with a soft pile"},
+    "victory": {"malay": "kemenangan", "chinese": "胜利", "definition": "an act of defeating an enemy"},
+    "vivid": {"malay": "jelas", "chinese": "生动的", "definition": "producing powerful feelings or images"},
+    "vision": {"malay": "penglihatan", "chinese": "愿景", "definition": "the ability to see; a mental image"},
+    "wander": {"malay": "merayau", "chinese": "漫步", "definition": "to move about without a fixed course"},
+    "wealth": {"malay": "kekayaan", "chinese": "财富", "definition": "an abundance of valuable possessions"},
+    "whisper": {"malay": "bisikan", "chinese": "低语", "definition": "to speak very softly"},
+    "wisdom": {"malay": "kebijaksanaan", "chinese": "智慧", "definition": "the quality of having experience and good judgment"},
+    "wonder": {"malay": "keajaiban", "chinese": "惊奇", "definition": "a feeling of surprise and admiration"},
+    "xenon": {"malay": "xenon", "chinese": "氙", "definition": "a chemical element, a noble gas"},
+    "yield": {"malay": "hasil", "chinese": "产出", "definition": "to produce or provide; to give way"},
+    "youth": {"malay": "belia", "chinese": "青年", "definition": "the period between childhood and adulthood"},
+    "zenith": {"malay": "puncak", "chinese": "顶点", "definition": "the highest point reached"},
+};
+
+// Data layer (localStorage)
+function getUsers() {
+    try { return JSON.parse(localStorage.getItem('el_users') || '{}'); } catch { return {}; }
+}
+function saveUsers(users) { localStorage.setItem('el_users', JSON.stringify(users)); }
+function getUser(name) {
+    const users = getUsers();
+    return users[name] || null;
+}
+function createUser(name) {
+    const users = getUsers();
+    users[name] = { name, words: [] };
+    saveUsers(users);
+}
+function deleteUser(name) {
+    const users = getUsers();
+    delete users[name];
+    saveUsers(users);
+}
+function addWord(username, entry) {
+    const users = getUsers();
+    if (!users[username]) return;
+    users[username].words.push(entry);
+    saveUsers(users);
+}
+
+// State
+let currentUser = null;
+let currentWord = null;
+let testData = {};
+let reviewWords = [];
+let reviewIndex = 0;
+
+// Navigation
+function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+    if (id === 'menu') updateMenuButtons();
+    if (id === 'select-user') loadUserList();
+}
+
+function updateMenuButtons() {
+    ['btn-learn', 'btn-test', 'btn-review'].forEach(id => {
+        document.getElementById(id).disabled = !currentUser;
+    });
+    document.getElementById('user-status').textContent = currentUser
+        ? `Logged in as: ${currentUser}`
+        : 'No user selected';
+}
+
+// Create User
+function createUserAction() {
+    const name = document.getElementById('new-name').value.trim();
+    if (!name) return;
+    if (getUser(name)) { alert('User already exists!'); return; }
+    createUser(name);
+    currentUser = name;
+    document.getElementById('new-name').value = '';
+    showPage('menu');
+}
+
+// Select User
+function loadUserList() {
+    const users = getUsers();
+    const list = document.getElementById('user-list');
+    const names = Object.keys(users);
+    if (!names.length) {
+        list.innerHTML = '<p class="no-users">No users found. Create one first.</p>';
+        return;
+    }
+    list.innerHTML = names.map(n => {
+        const count = users[n].words.length;
+        return `<button class="user-btn" onclick="selectUser('${n}')">${n} <span>(${count} words)</span>
+            <button class="delete-btn" onclick="event.stopPropagation();deleteUserAction('${n}')">✕</button>
+        </button>`;
+    }).join('');
+}
+
+function selectUser(name) {
+    currentUser = name;
+    showPage('menu');
+}
+
+function deleteUserAction(name) {
+    if (!confirm(`Delete user "${name}" and all their data?`)) return;
+    deleteUser(name);
+    if (currentUser === name) currentUser = null;
+    loadUserList();
+}
+
+// Learn
+function doLearn() {
+    showPage('learn');
+    const userData = getUser(currentUser);
+    if (!userData) return;
+    const learned = new Set(userData.words.map(w => w.word));
+    const available = Object.keys(LOCAL_DICT).filter(w => !learned.has(w));
+    if (!available.length) { showEmpty('You\'ve learned all words!\n已全部学完!'); return; }
+
+    currentWord = available[Math.floor(Math.random() * available.length)];
+    const entry = LOCAL_DICT[currentWord];
+    document.getElementById('learn-word').textContent = currentWord.charAt(0).toUpperCase() + currentWord.slice(1);
+    document.getElementById('learn-malay').textContent = entry.malay;
+    document.getElementById('learn-chinese').textContent = entry.chinese;
+    document.getElementById('learn-definition').textContent = entry.definition;
+}
+
+function saveAndBack() {
+    if (currentWord && currentUser) {
+        const entry = LOCAL_DICT[currentWord];
+        addWord(currentUser, {
+            word: currentWord,
+            malay: entry.malay,
+            chinese: entry.chinese,
+            definition: entry.definition,
+            date: new Date().toISOString().slice(0, 19).replace('T', ' ')
+        });
+    }
+    showPage('menu');
+}
+
+// Test
+function doTest() {
+    showPage('test');
+    document.getElementById('test-answer').classList.add('hidden');
+    document.getElementById('test-answer').textContent = '';
+
+    const userData = getUser(currentUser);
+    if (!userData) return;
+    if (!userData.words.length) {
+        showEmpty('No words learned yet.\n还没有学过的单词!');
+        return;
+    }
+    const w = userData.words[Math.floor(Math.random() * userData.words.length)];
+    testData = w;
+    document.getElementById('test-word').textContent = w.word.charAt(0).toUpperCase() + w.word.slice(1);
+}
+
+function showTestAnswer() {
+    const a = document.getElementById('test-answer');
+    a.textContent = `Malay: ${testData.malay}\nChinese: ${testData.chinese}`;
+    a.classList.remove('hidden');
+}
+
+// Review
+function doReview() {
+    const userData = getUser(currentUser);
+    if (!userData) return;
+    const today = new Date().toISOString().slice(0, 10);
+    reviewWords = userData.words.filter(w => (w.date || '').startsWith(today));
+    if (!reviewWords.length) {
+        showEmpty('No words learned today.\n今天没有学过的单词。');
+        return;
+    }
+    reviewIndex = 0;
+    showPage('review');
+    showReviewWord();
+}
+
+function showReviewWord() {
+    const w = reviewWords[reviewIndex];
+    document.getElementById('review-counter').textContent = `${reviewIndex + 1} / ${reviewWords.length}`;
+    document.getElementById('review-word').textContent = w.word.charAt(0).toUpperCase() + w.word.slice(1);
+    document.getElementById('review-answer').classList.add('hidden');
+    document.getElementById('review-time').textContent = `Learned at: ${w.date}`;
+    reviewData = w;
+}
+
+let reviewData = {};
+
+function showReviewAnswer() {
+    const a = document.getElementById('review-answer');
+    a.textContent = `Malay: ${reviewData.malay}\nChinese: ${reviewData.chinese}`;
+    a.classList.remove('hidden');
+}
+
+function reviewNext() {
+    reviewIndex++;
+    if (reviewIndex < reviewWords.length) {
+        showReviewWord();
+    } else {
+        showEmpty('All reviewed!\n已全部复习!');
+    }
+}
+
+// Utility
+function showEmpty(msg) {
+    document.getElementById('empty-msg').textContent = msg;
+    showPage('empty');
+}
+
+function speakWord(text) {
+    if (!text) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    u.rate = 0.85;
+    speechSynthesis.speak(u);
+}
+
+// Bind events
+document.getElementById('new-name').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') createUserAction();
+});
+
+// Make createUser available
+window.createUser = createUserAction;
+
+// Init
+updateMenuButtons();
+</script>
+</body>
+</html>
