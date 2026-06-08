@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>English Learning v2.0.1</title>
+    <title>English Learning v2.0.2</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; min-height: 100vh; color: #333; }
@@ -50,6 +50,10 @@
         #empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 60px; }
         .empty-msg { font-size: 20px; text-align: center; color: #555; line-height: 1.6; margin-bottom: 24px; white-space: pre-line; }
         .delete-btn { background: none; border: none; color: #e74c3c; font-size: 12px; cursor: pointer; padding: 2px 6px; margin-left: 8px; }
+        .data-btns { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+        .data-btns.hidden { display: none; }
+        .data-btn { padding: 10px 20px; border: 1px solid #d0d0d0; border-radius: 8px; background: #fafafa; cursor: pointer; font-size: 13px; color: #555; white-space: pre-line; text-align: center; }
+        .data-btn:hover { background: #eef1ff; border-color: #4a6cf7; }
         @media (max-width: 480px) { #app { max-width: 100%; } .word-display { font-size: 28px; } .translate-ms, .translate-zh { font-size: 18px; } .action-btn { min-width: 100px; padding: 10px 16px; font-size: 14px; } }
     </style>
 </head>
@@ -93,6 +97,11 @@
                 <span class="btn-zh">退出</span>
                 <span class="btn-ms">Keluar</span>
             </button>
+        </div>
+        <div id="data-btns" class="data-btns hidden">
+            <button class="data-btn" onclick="exportUser()">📥 Export Data\n导出/Import Data</button>
+            <button class="data-btn" onclick="document.getElementById('import-file').click()">📤 Import Data\n导入/Import Data</button>
+            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importUser(event)">
         </div>
     </div>
 
@@ -333,6 +342,7 @@ function updateMenuButtons() {
     document.getElementById('user-status').textContent = currentUser
         ? `Logged in as: ${currentUser}`
         : 'No user selected';
+    document.getElementById('data-btns').classList.toggle('hidden', !currentUser);
 }
 
 // Create User
@@ -492,6 +502,46 @@ document.getElementById('new-name').addEventListener('keydown', function(e) {
 
 // Make createUser available
 window.createUser = createUserAction;
+
+// Export/Import
+function exportUser() {
+    if (!currentUser) { alert('Please select a user first!'); return; }
+    const data = getUser(currentUser);
+    if (!data) return;
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${currentUser}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importUser(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!data.name || !Array.isArray(data.words)) {
+                alert('Invalid file format!');
+                return;
+            }
+            const users = getUsers();
+            users[data.name] = data;
+            saveUsers(users);
+            currentUser = data.name;
+            updateMenuButtons();
+            alert(`Imported user "${data.name}" with ${data.words.length} words!`);
+        } catch {
+            alert('Failed to read file!');
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
 
 // Init
 updateMenuButtons();
