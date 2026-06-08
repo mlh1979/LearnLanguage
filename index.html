@@ -294,7 +294,9 @@ const LOCAL_DICT = {
     "zenith": {"malay": "puncak", "chinese": "顶点", "definition": "the highest point reached"},
 };
 
-// Data layer (localStorage)
+// Data layer (localStorage + file)
+const DEFAULT_KEY = 'el_default_data';
+
 function getUsers() {
     try { return JSON.parse(localStorage.getItem('el_users') || '{}'); } catch { return {}; }
 }
@@ -318,6 +320,88 @@ function addWord(username, entry) {
     if (!users[username]) return;
     users[username].words.push(entry);
     saveUsers(users);
+}
+
+function getFileTimestamp() {
+    const d = new Date();
+    return d.getFullYear() +
+        String(d.getMonth()+1).padStart(2,'0') +
+        String(d.getDate()).padStart(2,'0') + '_' +
+        String(d.getHours()).padStart(2,'0') +
+        String(d.getMinutes()).padStart(2,'0') +
+        String(d.getSeconds()).padStart(2,'0');
+}
+
+function downloadFile(data, filename) {
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Auto-export: download as name_default.json to device
+function autoExport(name) {
+    const data = getUser(name);
+    if (!data) return;
+    localStorage.setItem(DEFAULT_KEY, JSON.stringify(data));
+    downloadFile(data, `${name}_default.json`);
+}
+
+// Manual export: download as name_yyyyMMdd_24hmmss.json
+function exportUser() {
+    if (!currentUser) { alert('Please select a user first!'); return; }
+    const data = getUser(currentUser);
+    if (!data) return;
+    downloadFile(data, `${currentUser}_${getFileTimestamp()}.json`);
+}
+
+// Import from file
+function importUser(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!data.name || !Array.isArray(data.words)) {
+                alert('Invalid file format!');
+                return;
+            }
+            const users = getUsers();
+            users[data.name] = data;
+            saveUsers(users);
+            currentUser = data.name;
+            localStorage.setItem(DEFAULT_KEY, JSON.stringify(data));
+            updateMenuButtons();
+            alert(`Imported user "${data.name}" with ${data.words.length} words!`);
+        } catch {
+            alert('Failed to read file!');
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
+// Auto-import on page load: try to restore from default data
+function autoImport() {
+    const saved = localStorage.getItem(DEFAULT_KEY);
+    if (!saved) return false;
+    try {
+        const data = JSON.parse(saved);
+        if (!data.name || !Array.isArray(data.words)) return false;
+        const users = getUsers();
+        users[data.name] = data;
+        saveUsers(users);
+        currentUser = data.name;
+        updateMenuButtons();
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 // State
@@ -353,6 +437,8 @@ function createUserAction() {
     createUser(name);
     currentUser = name;
     document.getElementById('new-name').value = '';
+    updateMenuButtons();
+    autoExport(name);
     showPage('menu');
 }
 
@@ -412,6 +498,7 @@ function saveAndBack() {
             definition: entry.definition,
             date: new Date().toISOString().slice(0, 19).replace('T', ' ')
         });
+        autoExport(currentUser);
     }
     showPage('menu');
 }
@@ -503,48 +590,14 @@ document.getElementById('new-name').addEventListener('keydown', function(e) {
 // Make createUser available
 window.createUser = createUserAction;
 
-// Export/Import
-function exportUser() {
-    if (!currentUser) { alert('Please select a user first!'); return; }
-    const data = getUser(currentUser);
-    if (!data) return;
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${currentUser}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-}
+// Export/Import wrapper
+window.exportUser = exportUser;
+window.importUser = importUser;
 
-function importUser(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = JSON.parse(e.target.result);
-            if (!data.name || !Array.isArray(data.words)) {
-                alert('Invalid file format!');
-                return;
-            }
-            const users = getUsers();
-            users[data.name] = data;
-            saveUsers(users);
-            currentUser = data.name;
-            updateMenuButtons();
-            alert(`Imported user "${data.name}" with ${data.words.length} words!`);
-        } catch {
-            alert('Failed to read file!');
-        }
-    };
-    reader.readAsText(file);
-    event.target.value = '';
+// Init: try auto-import first, then update UI
+if (!autoImport()) {
+    updateMenuButtons();
 }
-
-// Init
-updateMenuButtons();
 </script>
 </body>
 </html>
