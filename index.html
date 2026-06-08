@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>English Learning (v1.0.0.7)</title>
+    <title id="app-title">English Learning</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; min-height: 100vh; color: #333; }
@@ -60,7 +60,7 @@
 <body>
 <div id="app">
     <header id="app-header">
-        <h1>English Learning (v1.0.0.7)</h1>
+        <h1>English Learning <span id="version-badge"></span></h1>
         <div id="user-status">No user selected</div>
     </header>
 
@@ -180,6 +180,12 @@
 </div>
 
 <script>
+// ========= VERSION NUMBER - change this once, everywhere updates =========
+const APP_VERSION = 'v1.0.0.7';
+document.title = 'English Learning (' + APP_VERSION + ')';
+document.getElementById('version-badge').textContent = '(' + APP_VERSION + ')';
+// ==========================================================================
+
 const LOCAL_DICT = {
     "abandon": {"malay": "meninggalkan", "chinese": "放弃", "definition": "to leave something or someone behind"},
     "absorb": {"malay": "menyerap", "chinese": "吸收", "definition": "to take in or soak up"},
