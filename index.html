@@ -181,7 +181,7 @@
 
 <script>
 // ========= VERSION NUMBER - change this once, everywhere updates =========
-const APP_VERSION = 'v1.0.0.8';
+const APP_VERSION = 'v1.0.0.9';
 document.title = 'English Learning (' + APP_VERSION + ')';
 // ==========================================================================
 
@@ -477,6 +477,7 @@ function deleteUserAction(name) {
 
 // Learn
 function doLearn() {
+    saveCurrentWord();
     showPage('learn');
     const userData = getUser(currentUser);
     if (!userData) return;
@@ -492,7 +493,8 @@ function doLearn() {
     document.getElementById('learn-definition').textContent = entry.definition;
 }
 
-function saveAndBack() {
+// Save current learned word (called internally before next word or back)
+function saveCurrentWord() {
     if (currentWord && currentUser) {
         const entry = LOCAL_DICT[currentWord];
         addWord(currentUser, {
@@ -504,6 +506,11 @@ function saveAndBack() {
         });
         autoSave(currentUser);
     }
+}
+
+function saveAndBack() {
+    saveCurrentWord();
+    currentWord = null;
     showPage('menu');
 }
 
