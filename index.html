@@ -1119,7 +1119,7 @@ async function fetchAndShowOnlineWord(learned) {
 
                 currentWord = entry.word;
                 DICT[entry.word] = {
-                    image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=200&fit=crop",
+                    image: "https://source.unsplash.com/400x200/?" + encodeURIComponent(entry.word),
                     definition: { en: def, zh: "", ms: "", ta: "", ja: "", zhTW: "", ko: "", th: "", vi: "", id: "", es: "", fr: "", de: "", ar: "", ru: "", pt: "", it: "", nl: "" },
                     sentence: [
                         { lang: 'en', text: example || (entry.word + ' is a useful word to know.') },
@@ -1130,7 +1130,6 @@ async function fetchAndShowOnlineWord(learned) {
                 };
                 renderLearnPage();
                 return;
-            }
         } catch (e) { /* try next */ }
     }
     // Fallback to cache
@@ -1180,7 +1179,7 @@ async function refreshCachedWords() {
                     ? entry.meanings[0].definitions[0].example || '' : '';
                 results.push({
                     word: entry.word,
-                    image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=200&fit=crop",
+                    image: "https://source.unsplash.com/400x200/?" + encodeURIComponent(entry.word),
                     definition: { en: def, zh: "", ms: "", ta: "", ja: "", zhTW: "", ko: "", th: "", vi: "", id: "", es: "", fr: "", de: "", ar: "", ru: "", pt: "", it: "", nl: "" },
                     sentence: [
                         { lang: 'en', text: example || (entry.word + ' is a useful word to know.') },
