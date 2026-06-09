@@ -223,7 +223,6 @@
         <div id="test-sentences" class="sentence-panel hidden"></div>
         <div class="btn-row">
             <button class="action-btn" onclick="showTestAnswer()">Show Answer</button>
-            <button class="action-btn secondary" onclick="regenerateSentences(testData.word, 'test-sentences')"><span class="btn-en">Regenerate Sentences</span><span class="btn-zh">重新生成</span></button>
         </div>
         <div class="btn-row">
             <button class="action-btn primary" onclick="doTest()">Next Word</button>
@@ -241,7 +240,6 @@
         <div id="review-time" class="time-info"></div>
         <div class="btn-row">
             <button class="action-btn" onclick="showReviewAnswer()">Show Answer</button>
-            <button class="action-btn secondary" onclick="regenerateSentences(reviewWords[reviewIndex].word, 'review-sentences')"><span class="btn-en">Regenerate Sentences</span><span class="btn-zh">重新生成</span></button>
         </div>
         <div class="btn-row">
             <button class="action-btn primary" id="btn-review-next" onclick="reviewNext()">Next Word</button>
@@ -275,7 +273,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.1.5';
+const APP_VERSION = 'v1.0.1.6';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
