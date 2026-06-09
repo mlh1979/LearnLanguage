@@ -279,7 +279,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.2.5';
+const APP_VERSION = 'v1.0.2.6';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -1388,40 +1388,13 @@ function renderSentences(wordKey, containerId) {
     const learnLang = settings.learnLang;
     const container = document.getElementById(containerId);
 
-    // If regenerated, pick random 3 sentences from all languages
-    // If not, pick learnLang + transLang1 + transLang2
-    let picked;
-    if (_sentenceShuffle[containerId]) {
-        // Random 3 from all sentences, display in settings order
-        const shuffled = [...entry.sentence].sort(function() { return Math.random() - 0.5; });
-        picked = [];
-        // Always show exactly 3, prioritizing settings languages but allow random
-        const order = [learnLang, settings.transLang1, settings.transLang2];
-        const usedLangs = new Set();
-        // First, check if shuffled sentences contain any of our preset langs
-        for (const lang of order) {
-            if (picked.length >= 3) break;
-            const found = shuffled.find(function(s) { return s.lang === lang && !usedLangs.has(s.lang); });
-            if (found) { picked.push(found); usedLangs.add(found.lang); }
-        }
-        // Fill remaining slots from random sentences
-        for (const s of shuffled) {
-            if (picked.length >= 3) break;
-            if (!usedLangs.has(s.lang)) { picked.push(s); usedLangs.add(s.lang); }
-        }
-    } else {
-        // Default: learnLang + transLang1 + transLang2 in order
-        picked = [];
-        const seen = new Set();
-        const priorityLangs = [learnLang, settings.transLang1, settings.transLang2];
-        for (const pLang of priorityLangs) {
-            const sent = entry.sentence.find(s => s.lang === pLang);
-            if (sent && !seen.has(sent.lang)) { picked.push(sent); seen.add(sent.lang); }
-        }
-        for (const sent of entry.sentence) {
-            if (picked.length >= 3) break;
-            if (!seen.has(sent.lang)) { picked.push(sent); seen.add(sent.lang); }
-        }
+    // Display sentences in language priority order: learnLang, transLang1, transLang2
+    const order = [learnLang, settings.transLang1, settings.transLang2];
+    const picked = [];
+    const seen = new Set();
+    for (const lang of order) {
+        const sent = entry.sentence.find(function(s) { return s.lang === lang; });
+        if (sent && !seen.has(sent.lang)) { picked.push(sent); seen.add(sent.lang); }
     }
 
     let html = '';
