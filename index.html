@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4a6cf7">
-    <title>Language Learning</title>
+    <title>Learn Language</title>
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
     <link rel="apple-touch-icon" href="./icon-192.png">
@@ -78,7 +78,7 @@
 <body>
 <div id="app">
     <header id="app-header">
-        <h1 id="app-title-text">Language Learning <span id="version-badge"></span></h1>
+        <h1 id="app-title-text">Learn Language <span id="version-badge"></span></h1>
         <div id="user-status">No user selected</div>
     </header>
 
@@ -232,8 +232,8 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v2.0.0.1';
-document.title = 'Language Learning (' + APP_VERSION + ')';
+const APP_VERSION = 'v2.0.0.2';
+document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
 const LANGS = {
@@ -609,7 +609,7 @@ function updateMenuButtons() {
     document.getElementById('lang-settings').classList.toggle('hidden', !currentUser);
     const settings = getCurrentSettings();
     const langName = LANGS[settings.learnLang] ? LANGS[settings.learnLang].name : 'Language';
-    document.getElementById('app-title-text').innerHTML = `${langName} Learning <span id="version-badge">${'(' + APP_VERSION + ')'}</span>`;
+    document.getElementById('app-title-text').innerHTML = `Learn ${langName} <span id="version-badge">${'(' + APP_VERSION + ')'}</span>`;
     document.getElementById('version-badge').textContent = '(' + APP_VERSION + ')';
 }
 
