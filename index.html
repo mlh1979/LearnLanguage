@@ -895,12 +895,39 @@ function importUser(event) {
 }
 
 function autoRestore() {
+    // Migrate old words format (array) to new format (object by learnLang)
+    migrateWords();
     const last = localStorage.getItem('el_last_user');
     if (last && getUser(last)) {
         currentUser = last;
         updateMenuButtons();
         renderLangSelectors();
     }
+}
+
+function migrateWords() {
+    const users = getUsers();
+    let changed = false;
+    Object.keys(users).forEach(function(name) {
+        var u = users[name];
+        if (Array.isArray(u.words)) {
+            var lang = u.settings ? u.settings.learnLang : 'en';
+            var migrated = {};
+            migrated[lang] = u.words;
+            u.words = migrated;
+            changed = true;
+        } else if (u.words && typeof u.words === 'object') {
+            // Ensure all sub-arrays exist
+            for (var key in u.words) {
+                if (!Array.isArray(u.words[key])) {
+                    u.words[key] = [];
+                }
+            }
+        } else if (!u.words) {
+            u.words = {};
+        }
+    });
+    if (changed) saveUsers(users);
 }
 
 // State
