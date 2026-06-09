@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4a6cf7">
-    <title id="app-title">English Learning</title>
+    <title id="app-title">Language Learning</title>
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
     <link rel="apple-touch-icon" href="./icon-192.png">
@@ -47,9 +47,17 @@
         .no-users { text-align: center; color: #888; padding: 20px; }
         .status-badge { text-align: center; font-size: 12px; color: #888; margin-bottom: 10px; }
         .word-display { font-size: 36px; font-weight: 700; text-align: center; padding: 20px 0 10px; color: #1a1a2e; }
-        .translate-ms { font-size: 22px; text-align: center; color: #10b981; padding: 8px 0; }
-        .translate-zh { font-size: 22px; text-align: center; color: #3b82f6; padding: 4px 0 12px; }
+        .translate-row { font-size: 22px; text-align: center; padding: 6px 0; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .translate-label { font-size: 13px; color: #888; font-weight: 600; min-width: 28px; }
+        .translate-text { color: #333; }
         .definition { font-size: 14px; text-align: center; color: #666; padding: 10px 16px; background: #f8f9fa; border-radius: 8px; margin-bottom: 16px; line-height: 1.5; }
+        .sentence-panel { margin: 12px 0; }
+        .sentence-panel-title { font-size: 13px; color: #888; font-weight: 600; margin-bottom: 6px; text-align: center; }
+        .sentence-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 6px; }
+        .sentence-lang { font-size: 11px; color: #6366f1; font-weight: 700; min-width: 24px; }
+        .sentence-text { flex: 1; font-size: 14px; color: #444; line-height: 1.4; }
+        .sentence-btn { background: none; border: 1px solid #d0d0d0; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 13px; color: #6366f1; white-space: nowrap; }
+        .sentence-btn:hover { background: #eef1ff; border-color: #6366f1; }
         .answer-box { background: #fef3c7; border-radius: 10px; padding: 16px 20px; font-size: 18px; text-align: center; line-height: 1.6; margin: 12px 0; }
         .counter { text-align: center; font-size: 14px; color: #888; margin-bottom: 5px; }
         .time-info { text-align: center; font-size: 12px; color: #aaa; margin: 8px 0 0; }
@@ -60,21 +68,37 @@
         .data-btns.hidden { display: none; }
         .data-btn { padding: 10px 20px; border: 1px solid #d0d0d0; border-radius: 8px; background: #fafafa; cursor: pointer; font-size: 13px; color: #555; white-space: pre-line; text-align: center; }
         .data-btn:hover { background: #eef1ff; border-color: #4a6cf7; }
-        /* Update notification */
+        .lang-btn { padding: 10px 16px; border: 2px solid #e9ecef; border-radius: 10px; background: #f8f9fa; cursor: pointer; font-size: 14px; font-weight: 600; color: #333; transition: all 0.2s; min-width: 100px; text-align: center; }
+        .lang-btn:hover { background: #eef1ff; border-color: #4a6cf7; }
+        .lang-btn.active { background: #eef1ff; border-color: #4a6cf7; color: #4a6cf7; }
+        .lang-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 12px; flex-wrap: wrap; }
+        .lang-label { font-size: 12px; color: #888; text-align: center; margin-bottom: 6px; font-weight: 600; }
+        /* Language selector panel */
+        .lang-selector { background: #f8f9fa; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
         #update-banner { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #4a6cf7; color: white; padding: 12px 20px; text-align: center; z-index: 9999; }
         #update-banner button { background: white; color: #4a6cf7; border: none; padding: 6px 16px; border-radius: 6px; font-weight: 600; margin-left: 10px; cursor: pointer; }
-        @media (max-width: 480px) { #app { max-width: 100%; } .word-display { font-size: 28px; } .translate-ms, .translate-zh { font-size: 18px; } .action-btn { min-width: 100px; padding: 10px 16px; font-size: 14px; } }
+        @media (max-width: 480px) { #app { max-width: 100%; } .word-display { font-size: 28px; } .translate-row { font-size: 18px; } .action-btn { min-width: 100px; padding: 10px 16px; font-size: 14px; } }
     </style>
 </head>
 <body>
 <div id="app">
     <header id="app-header">
-        <h1>English Learning <span id="version-badge"></span></h1>
+        <h1 id="app-title-text">Language Learning <span id="version-badge"></span></h1>
         <div id="user-status">No user selected</div>
     </header>
 
     <!-- Menu -->
     <div id="menu" class="page">
+        <!-- Language Settings Panel -->
+        <div id="lang-settings" class="lang-selector hidden">
+            <div class="lang-label">Learn Language</div>
+            <div class="lang-row" id="lang-learn-row"></div>
+            <div class="lang-label">Translate to</div>
+            <div class="lang-row" id="lang-trans1-row"></div>
+            <div class="lang-label">Translate to (2nd)</div>
+            <div class="lang-row" id="lang-trans2-row"></div>
+        </div>
+
         <div class="btn-grid">
             <button class="menu-btn" onclick="showPage('create-user')">
                 <span class="btn-en">Create New User</span>
@@ -108,8 +132,8 @@
             </button>
         </div>
         <div id="data-btns" class="data-btns hidden">
-            <button class="data-btn" onclick="exportUser()">📥 Export Data\n导出/Import Data</button>
-            <button class="data-btn" onclick="document.getElementById('import-file').click()">📤 Import Data\n导入/Import Data</button>
+            <button class="data-btn" onclick="exportUser()">Export Data</button>
+            <button class="data-btn" onclick="document.getElementById('import-file').click()">Import Data</button>
             <input type="file" id="import-file" accept=".json" style="display:none" onchange="importUser(event)">
         </div>
     </div>
@@ -138,11 +162,9 @@
     <!-- Learn -->
     <div id="learn" class="page hidden">
         <div id="learn-word" class="word-display"></div>
-        <div id="learn-malay" class="translate-ms"></div>
-        <div id="learn-chinese" class="translate-zh"></div>
-        <div id="learn-definition" class="definition"></div>
+        <div id="learn-def" class="definition"></div>
+        <div id="learn-sentences" class="sentence-panel"></div>
         <div class="btn-row">
-            <button class="action-btn" onclick="speakWord(currentWord)">Play Sound</button>
             <button class="action-btn" onclick="doLearn()">Next Word</button>
             <button class="action-btn primary" onclick="saveAndBack()">Save & Back</button>
         </div>
@@ -154,8 +176,8 @@
         <div class="status-badge">Test</div>
         <div id="test-word" class="word-display"></div>
         <div id="test-answer" class="answer-box hidden"></div>
+        <div id="test-sentences" class="sentence-panel"></div>
         <div class="btn-row">
-            <button class="action-btn" onclick="speakWord(testData.word)">Play Sound</button>
             <button class="action-btn" onclick="showTestAnswer()">Show Answer</button>
         </div>
         <div class="btn-row">
@@ -170,9 +192,9 @@
         <div id="review-counter" class="counter"></div>
         <div id="review-word" class="word-display"></div>
         <div id="review-answer" class="answer-box hidden"></div>
+        <div id="review-sentences" class="sentence-panel"></div>
         <div id="review-time" class="time-info"></div>
         <div class="btn-row">
-            <button class="action-btn" onclick="speakWord(reviewWords[reviewIndex].word)">Play Sound</button>
             <button class="action-btn" onclick="showReviewAnswer()">Show Answer</button>
         </div>
         <div class="btn-row">
@@ -188,130 +210,300 @@
     </div>
 </div>
 
-<!-- Update banner -->
 <div id="update-banner">
     New version available! <button onclick="installUpdate()">Update Now</button>
 </div>
 
 <script>
-// ========= VERSION NUMBER - change this once, everywhere updates =========
-const APP_VERSION = 'v1.0.0.12';
-document.title = 'English Learning (' + APP_VERSION + ')';
-// ==========================================================================
+// ========= VERSION =========
+const APP_VERSION = 'v2.0.0.0';
+document.title = 'Language Learning (' + APP_VERSION + ')';
+// ============================
 
-const LOCAL_DICT = {
-    "abandon": {"malay": "meninggalkan", "chinese": "放弃", "definition": "to leave something or someone behind"},
-    "absorb": {"malay": "menyerap", "chinese": "吸收", "definition": "to take in or soak up"},
-    "accent": {"malay": "loghat", "chinese": "口音", "definition": "a distinctive way of pronunciation"},
-    "achieve": {"malay": "mencapai", "chinese": "实现", "definition": "to successfully bring about a result"},
-    "anchor": {"malay": "sauh", "chinese": "锚", "definition": "a heavy object used to moor a vessel"},
-    "balance": {"malay": "keseimbangan", "chinese": "平衡", "definition": "an even distribution of weight"},
-    "beacon": {"malay": "lampu suar", "chinese": "灯塔", "definition": "a light or signal for guidance"},
-    "blossom": {"malay": "berbunga", "chinese": "开花", "definition": "to produce flowers; to flourish"},
-    "brilliant": {"malay": "cemerlang", "chinese": "杰出的", "definition": "very bright or intelligent"},
-    "breeze": {"malay": "angin sepoi-sepoi", "chinese": "微风", "definition": "a gentle wind"},
-    "capture": {"malay": "menangkap", "chinese": "捕获", "definition": "to take into one's possession"},
-    "castle": {"malay": "istana", "chinese": "城堡", "definition": "a large fortified building"},
-    "candid": {"malay": "jujur", "chinese": "坦率的", "definition": "truthful and straightforward"},
-    "courage": {"malay": "keberanian", "chinese": "勇气", "definition": "the ability to face danger or fear"},
-    "charm": {"malay": "daya tarik", "chinese": "魅力", "definition": "the power of pleasing or attracting"},
-    "dawn": {"malay": "subuh", "chinese": "黎明", "definition": "the first appearance of light in the sky"},
-    "debate": {"malay": "perbahasan", "chinese": "辩论", "definition": "a formal discussion on a topic"},
-    "desire": {"malay": "keinginan", "chinese": "渴望", "definition": "a strong feeling of wanting"},
-    "determine": {"malay": "menentukan", "chinese": "决定", "definition": "to decide or settle conclusively"},
-    "diverse": {"malay": "pelbagai", "chinese": "多样的", "definition": "showing a great deal of variety"},
-    "eager": {"malay": "ghairah", "chinese": "热切的", "definition": "enthusiastic and impatient"},
-    "eclipse": {"malay": "gerhana", "chinese": "日食/月食", "definition": "an obscuring of light from one body by another"},
-    "elegant": {"malay": "anggun", "chinese": "优雅的", "definition": "graceful and stylish"},
-    "eloquent": {"malay": "fasih", "chinese": "雄辩的", "definition": "fluent and persuasive in speech"},
-    "embrace": {"malay": "merangkul", "chinese": "拥抱", "definition": "to hold closely; to accept willingly"},
-    "fable": {"malay": "dongeng", "chinese": "寓言", "definition": "a short story conveying a moral"},
-    "fierce": {"malay": "ganas", "chinese": "激烈的", "definition": "having a violent intensity"},
-    "flourish": {"malay": "berkembang", "chinese": "繁荣", "definition": "to grow or develop in a healthy way"},
-    "frozen": {"malay": "beku", "chinese": "冻结的", "definition": "turned into ice"},
-    "gentle": {"malay": "lembut", "chinese": "温柔的", "definition": "mild in temperament; kind"},
-    "glow": {"malay": "bersinar", "chinese": "发光", "definition": "to give out steady light"},
-    "grace": {"malay": "anggun", "chinese": "优雅", "definition": "smooth elegance of movement"},
-    "grateful": {"malay": "bersyukur", "chinese": "感恩的", "definition": "feeling or showing appreciation"},
-    "genuine": {"malay": "tulen", "chinese": "真正的", "definition": "truly what it claims to be"},
-    "harmony": {"malay": "keharmonian", "chinese": "和谐", "definition": "agreement or concord"},
-    "harvest": {"malay": "tuaian", "chinese": "收获", "definition": "the process of gathering crops"},
-    "honor": {"malay": "hormat", "chinese": "荣誉", "definition": "high respect; great esteem"},
-    "horizon": {"malay": "ufuk", "chinese": "地平线", "definition": "the line where earth and sky appear to meet"},
-    "humble": {"malay": "rendah hati", "chinese": "谦逊的", "definition": "having a modest opinion of oneself"},
-    "ignite": {"malay": "menyalakan", "chinese": "点燃", "definition": "to set on fire; to arouse"},
-    "illusion": {"malay": "ilusi", "chinese": "幻觉", "definition": "a false idea or belief"},
-    "imagine": {"malay": "membayangkan", "chinese": "想象", "definition": "to form a mental image"},
-    "inspire": {"malay": "mengilhamkan", "chinese": "启发", "definition": "to fill with the urge to do something"},
-    "island": {"malay": "pulau", "chinese": "岛屿", "definition": "a piece of land surrounded by water"},
-    "jade": {"malay": "jed", "chinese": "玉石", "definition": "a hard green stone used for ornaments"},
-    "jewel": {"malay": "permata", "chinese": "宝石", "definition": "a precious stone"},
-    "journey": {"malay": "perjalanan", "chinese": "旅程", "definition": "an act of travelling from one place to another"},
-    "jungle": {"malay": "hutan", "chinese": "丛林", "definition": "a dense forest in a tropical area"},
-    "justice": {"malay": "keadilan", "chinese": "正义", "definition": "just behavior or treatment"},
-    "kindle": {"malay": "menyalakan", "chinese": "点燃", "definition": "to start a fire; to arouse emotion"},
-    "kingdom": {"malay": "kerajaan", "chinese": "王国", "definition": "a country ruled by a king or queen"},
-    "knowledge": {"malay": "pengetahuan", "chinese": "知识", "definition": "facts and information acquired by experience"},
-    "launch": {"malay": "melancarkan", "chinese": "发射", "definition": "to set in motion; to start"},
-    "legend": {"malay": "lagenda", "chinese": "传说", "definition": "a traditional story regarded as historical"},
-    "liberty": {"malay": "kebebasan", "chinese": "自由", "definition": "the state of being free"},
-    "linger": {"malay": "berpanjangan", "chinese": "徘徊", "definition": "to stay in a place longer than necessary"},
-    "luminous": {"malay": "bersinar", "chinese": "发光的", "definition": "giving off light; bright"},
-    "magnificent": {"malay": "megah", "chinese": "壮丽的", "definition": "impressively beautiful or elaborate"},
-    "marvel": {"malay": "keajaiban", "chinese": "奇迹", "definition": "a wonderful or astonishing thing"},
-    "meadow": {"malay": "padang rumput", "chinese": "草地", "definition": "a field with grass and wildflowers"},
-    "measure": {"malay": "mengukur", "chinese": "测量", "definition": "to ascertain the size or amount"},
-    "mirror": {"malay": "cermin", "chinese": "镜子", "definition": "a surface that reflects an image"},
-    "narrative": {"malay": "naratif", "chinese": "叙事", "definition": "a spoken or written account of events"},
-    "native": {"malay": "asal", "chinese": "本地的", "definition": "belonging to a place by birth"},
-    "navigate": {"malay": "navigasi", "chinese": "导航", "definition": "to plan and direct a route"},
-    "noble": {"malay": "mulia", "chinese": "高尚的", "definition": "having high moral qualities"},
-    "observe": {"malay": "memerhati", "chinese": "观察", "definition": "to notice or perceive something"},
-    "oasis": {"malay": "oasis", "chinese": "绿洲", "definition": "a fertile spot in a desert"},
-    "opinion": {"malay": "pendapat", "chinese": "意见", "definition": "a view or judgment about something"},
-    "orbit": {"malay": "orbit", "chinese": "轨道", "definition": "the curved path of a celestial object"},
-    "palace": {"malay": "istana", "chinese": "宫殿", "definition": "the official residence of a ruler"},
-    "paradise": {"malay": "syurga", "chinese": "天堂", "definition": "an ideal or perfect place"},
-    "patient": {"malay": "sabar", "chinese": "耐心的", "definition": "able to accept delay without anger"},
-    "ponder": {"malay": "merenung", "chinese": "沉思", "definition": "to think about something carefully"},
-    "pulse": {"malay": "denyutan nadi", "chinese": "脉搏", "definition": "a rhythmic throbbing of arteries"},
-    "quest": {"malay": "pencarian", "chinese": "探索", "definition": "a long search for something"},
-    "quiet": {"malay": "senyap", "chinese": "安静的", "definition": "making little or no noise"},
-    "radiant": {"malay": "berseri", "chinese": "容光焕发的", "definition": "sending out light; glowing"},
-    "random": {"malay": "rawak", "chinese": "随机的", "definition": "made without pattern or purpose"},
-    "reason": {"malay": "sebab", "chinese": "原因", "definition": "a cause or explanation"},
-    "rebel": {"malay": "pemberontak", "chinese": "反叛者", "definition": "a person who resists authority"},
-    "resilient": {"malay": "tabah", "chinese": "坚韧的", "definition": "able to recover quickly from difficulty"},
-    "safety": {"malay": "keselamatan", "chinese": "安全", "definition": "the condition of being protected from danger"},
-    "sculpt": {"malay": "memahat", "chinese": "雕刻", "definition": "to create a sculpture"},
-    "shadow": {"malay": "bayang", "chinese": "影子", "definition": "a dark area produced by a body blocking light"},
-    "sincere": {"malay": "ikhlas", "chinese": "真诚的", "definition": "free from pretense or deceit"},
-    "spark": {"malay": "percikan api", "chinese": "火花", "definition": "a small fiery particle"},
-    "talent": {"malay": "bakat", "chinese": "天赋", "definition": "a natural aptitude or skill"},
-    "thrive": {"malay": "berkembang maju", "chinese": "茁壮成长", "definition": "to grow or develop well"},
-    "tide": {"malay": "pasang surut", "chinese": "潮汐", "definition": "the regular rise and fall of the sea"},
-    "tranquil": {"malay": "tenang", "chinese": "宁静的", "definition": "free from disturbance; calm"},
-    "triumph": {"malay": "kemenangan", "chinese": "胜利", "definition": "a great victory or achievement"},
-    "unique": {"malay": "unik", "chinese": "独特的", "definition": "being the only one of its kind"},
-    "unity": {"malay": "perpaduan", "chinese": "团结", "definition": "the state of being united"},
-    "universe": {"malay": "alam semesta", "chinese": "宇宙", "definition": "all existing matter and space"},
-    "uplift": {"malay": "menaikkan semangat", "chinese": "鼓舞", "definition": "to elevate or inspire"},
-    "urgent": {"malay": "segera", "chinese": "紧急的", "definition": "requiring immediate action"},
-    "valley": {"malay": "lembah", "chinese": "山谷", "definition": "a low area between hills or mountains"},
-    "velvet": {"malay": "baldu", "chinese": "天鹅绒", "definition": "a closely woven fabric with a soft pile"},
-    "victory": {"malay": "kemenangan", "chinese": "胜利", "definition": "an act of defeating an enemy"},
-    "vivid": {"malay": "jelas", "chinese": "生动的", "definition": "producing powerful feelings or images"},
-    "vision": {"malay": "penglihatan", "chinese": "愿景", "definition": "the ability to see; a mental image"},
-    "wander": {"malay": "merayau", "chinese": "漫步", "definition": "to move about without a fixed course"},
-    "wealth": {"malay": "kekayaan", "chinese": "财富", "definition": "an abundance of valuable possessions"},
-    "whisper": {"malay": "bisikan", "chinese": "低语", "definition": "to speak very softly"},
-    "wisdom": {"malay": "kebijaksanaan", "chinese": "智慧", "definition": "the quality of having experience and good judgment"},
-    "wonder": {"malay": "keajaiban", "chinese": "惊奇", "definition": "a feeling of surprise and admiration"},
-    "xenon": {"malay": "xenon", "chinese": "氙", "definition": "a chemical element, a noble gas"},
-    "yield": {"malay": "hasil", "chinese": "产出", "definition": "to produce or provide; to give way"},
-    "youth": {"malay": "belia", "chinese": "青年", "definition": "the period between childhood and adulthood"},
-    "zenith": {"malay": "puncak", "chinese": "顶点", "definition": "the highest point reached"},
+// Language definitions
+const LANGS = {
+    en: { name: 'English', native: 'English', tts: 'en-US' },
+    zh: { name: 'Chinese', native: '中文', tts: 'zh-CN' },
+    ms: { name: 'Malay', native: 'Bahasa Melayu', tts: 'ms-MY' },
+    ta: { name: 'Tamil', native: 'தமிழ்', tts: 'ta-IN' },
+    ja: { name: 'Japanese', native: '日本語', tts: 'ja-JP' },
 };
+
+// Multi-language dictionary
+// Each word: { definition: {lang: text}, sentence: [{lang, text}], translations: {lang: text} }
+const DICT = {
+    "abandon": {
+        definition: { en: "to leave something or someone behind", zh: "放弃", ms: "meninggalkan", ta: "கைவிடு", ja: "放棄する" },
+        sentence: [
+            { lang: 'en', text: "They had to abandon their plan due to bad weather." },
+            { lang: 'zh', text: "由于天气不好，他们不得不放弃计划。" },
+            { lang: 'ms', text: "Mereka terpaksa meninggalkan rancangan mereka kerana cuaca buruk." },
+            { lang: 'ta', text: "கெட்ட வானிலை காரணமாக அவர்கள் தங்கள் திட்டத்தை கைவிட வேண்டியிருந்தது." },
+            { lang: 'ja', text: "悪天候のため、計画を諦めなければならなかった。" },
+        ],
+        translations: { zh: "放弃", ms: "meninggalkan", ta: "கைவிடு", ja: "放棄する" },
+    },
+    "absorb": {
+        definition: { en: "to take in or soak up", zh: "吸收", ms: "menyerap", ta: "உறிஞ்சு", ja: "吸収する" },
+        sentence: [
+            { lang: 'en', text: "Plants absorb water through their roots." },
+            { lang: 'zh', text: "植物通过根部吸收水分。" },
+            { lang: 'ms', text: "Tumbuhan menyerap air melalui akarnya." },
+            { lang: 'ta', text: "தாவரங்கள் தங்கள் வேர்கள் மூலம் தண்ணீரை உறிஞ்சுகின்றன." },
+            { lang: 'ja', text: "植物は根から水を吸収する。" },
+        ],
+        translations: { zh: "吸收", ms: "menyerap", ta: "உறிஞ்சு", ja: "吸収する" },
+    },
+    "achieve": {
+        definition: { en: "to successfully bring about a result", zh: "实现", ms: "mencapai", ta: "சாதி", ja: "達成する" },
+        sentence: [
+            { lang: 'en', text: "She worked hard to achieve her goals." },
+            { lang: 'zh', text: "她努力工作以实现目标。" },
+            { lang: 'ms', text: "Dia bekerja keras untuk mencapai matlamatnya." },
+            { lang: 'ta', text: "அவர் தனது இலக்குகளை அடைய கடுமையாக உழைத்தார்." },
+            { lang: 'ja', text: "彼女は目標を達成するために一生懸命働いた。" },
+        ],
+        translations: { zh: "实现", ms: "mencapai", ta: "சாதி", ja: "達成する" },
+    },
+    "balance": {
+        definition: { en: "an even distribution of weight", zh: "平衡", ms: "keseimbangan", ta: "சமநிலை", ja: "バランス" },
+        sentence: [
+            { lang: 'en', text: "Good balance is important in life." },
+            { lang: 'zh', text: "生活中良好的平衡很重要。" },
+            { lang: 'ms', text: "Keseimbangan yang baik adalah penting dalam kehidupan." },
+            { lang: 'ta', text: "வாழ்க்கையில் நல்ல சமநிலை முக்கியம்." },
+            { lang: 'ja', text: "人生では良いバランスが重要です。" },
+        ],
+        translations: { zh: "平衡", ms: "keseimbangan", ta: "சமநிலை", ja: "バランス" },
+    },
+    "brilliant": {
+        definition: { en: "very bright or intelligent", zh: "杰出的", ms: "cemerlang", ta: "அற்புதமான", ja: "素晴らしい" },
+        sentence: [
+            { lang: 'en', text: "She had a brilliant idea for the project." },
+            { lang: 'zh', text: "她为这个项目想出了一个出色的主意。" },
+            { lang: 'ms', text: "Dia mempunyai idea yang cemerlang untuk projek itu." },
+            { lang: 'ta', text: "அவருக்கு திட்டத்திற்கு ஒரு அற்புதமான யோசனை இருந்தது." },
+            { lang: 'ja', text: "彼女はプロジェクトに素晴らしいアイデアを持っていた。" },
+        ],
+        translations: { zh: "杰出的", ms: "cemerlang", ta: "அற்புதமான", ja: "素晴らしい" },
+    },
+    "courage": {
+        definition: { en: "the ability to face danger or fear", zh: "勇气", ms: "keberanian", ta: "தைரியம்", ja: "勇気" },
+        sentence: [
+            { lang: 'en', text: "It takes courage to speak in public." },
+            { lang: 'zh', text: "公开演讲需要勇气。" },
+            { lang: 'ms', text: "Ia memerlukan keberanian untuk bercakap di khalayak ramai." },
+            { lang: 'ta', text: "பொதுவில் பேச தைரியம் தேவை." },
+            { lang: 'ja', text: "公衆の前で話すには勇気が必要だ。" },
+        ],
+        translations: { zh: "勇气", ms: "keberanian", ta: "தைரியம்", ja: "勇気" },
+    },
+    "desire": {
+        definition: { en: "a strong feeling of wanting", zh: "渴望", ms: "keinginan", ta: "விருப்பம்", ja: "欲望" },
+        sentence: [
+            { lang: 'en', text: "She has a strong desire to travel." },
+            { lang: 'zh', text: "她强烈渴望旅行。" },
+            { lang: 'ms', text: "Dia mempunyai keinginan yang kuat untuk melancong." },
+            { lang: 'ta', text: "அவருக்கு பயணம் செய்ய வலுவான விருப்பம் உள்ளது." },
+            { lang: 'ja', text: "彼女は旅行したいという強い欲求を持っている。" },
+        ],
+        translations: { zh: "渴望", ms: "keinginan", ta: "விருப்பம்", ja: "欲望" },
+    },
+    "elegant": {
+        definition: { en: "graceful and stylish", zh: "优雅的", ms: "anggun", ta: "நளினமான", ja: "優雅な" },
+        sentence: [
+            { lang: 'en', text: "She wore an elegant dress to the party." },
+            { lang: 'zh', text: "她穿了一件优雅的裙子去参加派对。" },
+            { lang: 'ms', text: "Dia memakai gaun yang anggun ke parti itu." },
+            { lang: 'ta', text: "அவர் விருந்துக்கு நளினமான உடை அணிந்தார்." },
+            { lang: 'ja', text: "彼女はパーティーにエレガントなドレスを着ていった。" },
+        ],
+        translations: { zh: "优雅的", ms: "anggun", ta: "நளினமான", ja: "優雅な" },
+    },
+    "flourish": {
+        definition: { en: "to grow or develop in a healthy way", zh: "繁荣", ms: "berkembang", ta: "வளர்ச்சி", ja: "繁栄する" },
+        sentence: [
+            { lang: 'en', text: "The garden began to flourish in spring." },
+            { lang: 'zh', text: "花园在春天开始繁荣生长。" },
+            { lang: 'ms', text: "Taman mula berkembang pada musim bunga." },
+            { lang: 'ta', text: "வசந்த காலத்தில் தோட்டம் வளரத் தொடங்கியது." },
+            { lang: 'ja', text: "春になって庭が栄え始めた。" },
+        ],
+        translations: { zh: "繁荣", ms: "berkembang", ta: "வளர்ச்சி", ja: "繁栄する" },
+    },
+    "gentle": {
+        definition: { en: "mild in temperament; kind", zh: "温柔的", ms: "lembut", ta: "மென்மையான", ja: "優しい" },
+        sentence: [
+            { lang: 'en', text: "She spoke in a gentle voice." },
+            { lang: 'zh', text: "她用温柔的声音说话。" },
+            { lang: 'ms', text: "Dia bercakap dengan suara yang lembut." },
+            { lang: 'ta', text: "அவர் மென்மையான குரலில் பேசினார்." },
+            { lang: 'ja', text: "彼女は優しい声で話した。" },
+        ],
+        translations: { zh: "温柔的", ms: "lembut", ta: "மென்மையான", ja: "優しい" },
+    },
+    "harmony": {
+        definition: { en: "agreement or concord", zh: "和谐", ms: "keharmonian", ta: "நல்லிணக்கம்", ja: "調和" },
+        sentence: [
+            { lang: 'en', text: "They live in harmony with nature." },
+            { lang: 'zh', text: "他们与自然和谐相处。" },
+            { lang: 'ms', text: "Mereka hidup dalam keharmonian dengan alam semula jadi." },
+            { lang: 'ta', text: "அவர்கள் இயற்கையுடன் நல்லிணக்கமாக வாழ்கின்றனர்." },
+            { lang: 'ja', text: "彼らは自然と調和して暮らしている。" },
+        ],
+        translations: { zh: "和谐", ms: "keharmonian", ta: "நல்லிணக்கம்", ja: "調和" },
+    },
+    "imagine": {
+        definition: { en: "to form a mental image", zh: "想象", ms: "membayangkan", ta: "கற்பனை செய்", ja: "想像する" },
+        sentence: [
+            { lang: 'en', text: "Imagine a world without borders." },
+            { lang: 'zh', text: "想象一个没有边界的世界。" },
+            { lang: 'ms', text: "Bayangkan sebuah dunia tanpa sempadan." },
+            { lang: 'ta', text: "எல்லைகள் இல்லாத ஒரு உலகை கற்பனை செய்." },
+            { lang: 'ja', text: "国境のない世界を想像して。" },
+        ],
+        translations: { zh: "想象", ms: "membayangkan", ta: "கற்பனை செய்", ja: "想像する" },
+    },
+    "journey": {
+        definition: { en: "an act of travelling from one place to another", zh: "旅程", ms: "perjalanan", ta: "பயணம்", ja: "旅" },
+        sentence: [
+            { lang: 'en', text: "The journey took three hours." },
+            { lang: 'zh', text: "旅程花了三个小时。" },
+            { lang: 'ms', text: "Perjalanan mengambil masa tiga jam." },
+            { lang: 'ta', text: "பயணம் மூன்று மணிநேரம் எடுத்தது." },
+            { lang: 'ja', text: "旅は3時間かかった。" },
+        ],
+        translations: { zh: "旅程", ms: "perjalanan", ta: "பயணம்", ja: "旅" },
+    },
+    "knowledge": {
+        definition: { en: "facts and information acquired by experience", zh: "知识", ms: "pengetahuan", ta: "அறிவு", ja: "知識" },
+        sentence: [
+            { lang: 'en', text: "Knowledge is power." },
+            { lang: 'zh', text: "知识就是力量。" },
+            { lang: 'ms', text: "Pengetahuan adalah kuasa." },
+            { lang: 'ta', text: "அறிவே சக்தி." },
+            { lang: 'ja', text: "知識は力なり。" },
+        ],
+        translations: { zh: "知识", ms: "pengetahuan", ta: "அறிவு", ja: "知識" },
+    },
+    "liberty": {
+        definition: { en: "the state of being free", zh: "自由", ms: "kebebasan", ta: "சுதந்திரம்", ja: "自由" },
+        sentence: [
+            { lang: 'en', text: "Liberty is a fundamental human right." },
+            { lang: 'zh', text: "自由是一项基本人权。" },
+            { lang: 'ms', text: "Kebebasan adalah hak asasi manusia yang asas." },
+            { lang: 'ta', text: "சுதந்திரம் ஒரு அடிப்படை மனித உரிமை." },
+            { lang: 'ja', text: "自由は基本的な人権です。" },
+        ],
+        translations: { zh: "自由", ms: "kebebasan", ta: "சுதந்திரம்", ja: "自由" },
+    },
+    "magnificent": {
+        definition: { en: "impressively beautiful or elaborate", zh: "壮丽的", ms: "megah", ta: "அற்புதமான", ja: "壮大な" },
+        sentence: [
+            { lang: 'en', text: "The view from the mountain was magnificent." },
+            { lang: 'zh', text: "山上的景色非常壮丽。" },
+            { lang: 'ms', text: "Pemandangan dari gunung itu sangat megah." },
+            { lang: 'ta', text: "மலையின் காட்சி அற்புதமாக இருந்தது." },
+            { lang: 'ja', text: "山からの景色は壮大だった。" },
+        ],
+        translations: { zh: "壮丽的", ms: "megah", ta: "அற்புதமான", ja: "壮大な" },
+    },
+    "observe": {
+        definition: { en: "to notice or perceive something", zh: "观察", ms: "memerhati", ta: "கவனி", ja: "観察する" },
+        sentence: [
+            { lang: 'en', text: "Scientists observe the stars through telescopes." },
+            { lang: 'zh', text: "科学家通过望远镜观察星星。" },
+            { lang: 'ms', text: "Saintis memerhati bintang melalui teleskop." },
+            { lang: 'ta', text: "விஞ்ஞானிகள் தொலைநோக்கி மூலம் நட்சத்திரங்களை கவனிக்கின்றனர்." },
+            { lang: 'ja', text: "科学者は望遠鏡で星を観察する。" },
+        ],
+        translations: { zh: "观察", ms: "memerhati", ta: "கவனி", ja: "観察する" },
+    },
+    "paradise": {
+        definition: { en: "an ideal or perfect place", zh: "天堂", ms: "syurga", ta: "சொர்க்கம்", ja: "楽園" },
+        sentence: [
+            { lang: 'en', text: "This island is a tropical paradise." },
+            { lang: 'zh', text: "这个岛屿是热带天堂。" },
+            { lang: 'ms', text: "Pulau ini adalah syurga tropika." },
+            { lang: 'ta', text: "இந்த தீவு ஒரு வெப்பமண்டல சொர்க்கம்." },
+            { lang: 'ja', text: "この島は南国の楽園だ。" },
+        ],
+        translations: { zh: "天堂", ms: "syurga", ta: "சொர்க்கம்", ja: "楽園" },
+    },
+    "resilient": {
+        definition: { en: "able to recover quickly from difficulty", zh: "坚韧的", ms: "tabah", ta: "மீள்திறன்", ja: "回復力のある" },
+        sentence: [
+            { lang: 'en', text: "Children are remarkably resilient." },
+            { lang: 'zh', text: "孩子们非常坚韧。" },
+            { lang: 'ms', text: "Kanak-kanak sangat tabah." },
+            { lang: 'ta', text: "குழந்தைகள் குறிப்பிடத்தக்க மீள்திறன் கொண்டவர்கள்." },
+            { lang: 'ja', text: "子供たちは驚くほど回復力がある。" },
+        ],
+        translations: { zh: "坚韧的", ms: "tabah", ta: "மீள்திறன்", ja: "回復力のある" },
+    },
+    "thrive": {
+        definition: { en: "to grow or develop well", zh: "茁壮成长", ms: "berkembang maju", ta: "செழித்து வளர்", ja: "繁栄する" },
+        sentence: [
+            { lang: 'en', text: "The business continued to thrive." },
+            { lang: 'zh', text: "生意继续蓬勃发展。" },
+            { lang: 'ms', text: "Perniagaan terus berkembang maju." },
+            { lang: 'ta', text: "தொழில்துறை தொடர்ந்து செழித்து வளர்ந்தது." },
+            { lang: 'ja', text: "ビジネスは繁栄を続けた。" },
+        ],
+        translations: { zh: "茁壮成长", ms: "berkembang maju", ta: "செழித்து வளர்", ja: "繁栄する" },
+    },
+    "wisdom": {
+        definition: { en: "the quality of having experience and good judgment", zh: "智慧", ms: "kebijaksanaan", ta: "ஞானம்", ja: "知恵" },
+        sentence: [
+            { lang: 'en', text: "Wisdom comes with age." },
+            { lang: 'zh', text: "智慧随年龄而来。" },
+            { lang: 'ms', text: "Kebijaksanaan datang dengan usia." },
+            { lang: 'ta', text: "வயதுடன் ஞானம் வருகிறது." },
+            { lang: 'ja', text: "知恵は年とともに来る。" },
+        ],
+        translations: { zh: "智慧", ms: "kebijaksanaan", ta: "ஞானம்", ja: "知恵" },
+    },
+};
+
+// Get definition text for current settings
+function getDefinition(wordKey) {
+    const entry = DICT[wordKey];
+    if (!entry) return '';
+    const lang = currentUser ? getCurrentSettings().learnLang : 'en';
+    return entry.definition[lang] || entry.definition.en || '';
+}
+
+// Get translation for a word in a target language
+function getTranslation(wordKey, targetLang) {
+    const entry = DICT[wordKey];
+    if (!entry) return '';
+    if (entry.translations && entry.translations[targetLang]) return entry.translations[targetLang];
+    return entry.definition[targetLang] || '';
+}
+
+// Get sentences filtered to relevant languages
+function getSentences(wordKey) {
+    const entry = DICT[wordKey];
+    if (!entry || !entry.sentence) return [];
+    return entry.sentence;
+}
+
+// User settings helpers
+const DEFAULT_SETTINGS = { learnLang: 'en', transLang1: 'zh', transLang2: 'ms' };
+
+function getCurrentSettings() {
+    const u = getUser(currentUser);
+    return (u && u.settings) ? u.settings : DEFAULT_SETTINGS;
+}
+
+function saveSettings(s) {
+    const u = getUser(currentUser);
+    if (!u) return;
+    u.settings = s;
+    const all = getUsers();
+    all[currentUser] = u;
+    saveUsers(all);
+}
 
 // Data layer (localStorage)
 function getUsers() {
@@ -321,7 +513,7 @@ function saveUsers(data) { localStorage.setItem('el_users', JSON.stringify(data)
 function getUser(name) { return getUsers()[name] || null; }
 function createUser(name) {
     const u = getUsers();
-    u[name] = { name, words: [] };
+    u[name] = { name, settings: { ...DEFAULT_SETTINGS }, words: [] };
     saveUsers(u);
 }
 function deleteUser(name) {
@@ -329,10 +521,12 @@ function deleteUser(name) {
     delete u[name];
     saveUsers(u);
 }
-function addWord(username, entry) {
+function addWord(username, wordKey) {
     const u = getUsers();
     if (!u[username]) return;
-    u[username].words.push(entry);
+    // Check if already saved
+    if (u[username].words.find(w => w.word === wordKey)) return;
+    u[username].words.push({ word: wordKey, date: new Date().toISOString().slice(0, 19).replace('T', ' ') });
     saveUsers(u);
 }
 
@@ -366,10 +560,14 @@ function importUser(event) {
             const data = JSON.parse(e.target.result);
             if (!data.name || !Array.isArray(data.words)) { alert('Invalid file format!'); return; }
             const u = getUsers();
+            if (!data.settings) data.settings = { ...DEFAULT_SETTINGS };
             u[data.name] = data;
             saveUsers(u);
             currentUser = data.name;
+            localStorage.setItem('el_last_user', data.name);
             updateMenuButtons();
+            renderLangSelectors();
+            alert(`Imported user "${data.name}" with ${data.words.length} words!`);
         } catch { alert('Failed to read file!'); }
     };
     reader.readAsText(file);
@@ -382,15 +580,13 @@ function autoRestore() {
     if (last && getUser(last)) {
         currentUser = last;
         updateMenuButtons();
+        renderLangSelectors();
     }
 }
 
 // State
 let currentUser = null;
 let currentWord = null;
-let testData = {};
-let reviewWords = [];
-let reviewIndex = 0;
 
 // Navigation
 function showPage(id) {
@@ -408,6 +604,12 @@ function updateMenuButtons() {
         ? `Logged in as: ${currentUser}`
         : 'No user selected';
     document.getElementById('data-btns').classList.toggle('hidden', !currentUser);
+    document.getElementById('lang-settings').classList.toggle('hidden', !currentUser);
+    // Update app title based on learn language
+    const settings = getCurrentSettings();
+    const langName = LANGS[settings.learnLang] ? LANGS[settings.learnLang].name : 'Language';
+    document.getElementById('app-title-text').innerHTML = `${langName} Learning <span id="version-badge">${'(' + APP_VERSION + ')'}</span>`;
+    document.getElementById('version-badge').textContent = '(' + APP_VERSION + ')';
 }
 
 // Create User
@@ -420,6 +622,7 @@ function createUserAction() {
     localStorage.setItem('el_last_user', name);
     document.getElementById('new-name').value = '';
     updateMenuButtons();
+    renderLangSelectors();
     showPage('menu');
 }
 
@@ -443,6 +646,8 @@ function loadUserList() {
 function selectUser(name) {
     currentUser = name;
     localStorage.setItem('el_last_user', name);
+    updateMenuButtons();
+    renderLangSelectors();
     showPage('menu');
 }
 
@@ -453,34 +658,152 @@ function deleteUserAction(name) {
     loadUserList();
 }
 
+// Language selector rendering
+function renderLangSelectors() {
+    if (!currentUser) return;
+    const settings = getCurrentSettings();
+    const langs = Object.keys(LANGS);
+
+    function renderRow(containerId, selectedLang, prefix) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = langs.map(lang =>
+            `<button class="lang-btn ${selectedLang === lang ? 'active' : ''}" onclick="selectLang('${prefix}','${lang}')">${LANGS[lang].native}</button>`
+        ).join('');
+    }
+
+    renderRow('lang-learn-row', settings.learnLang, 'learn');
+    renderRow('lang-trans1-row', settings.transLang1, 'trans1');
+    renderRow('lang-trans2-row', settings.transLang2, 'trans2');
+}
+
+function selectLang(prefix, lang) {
+    const s = getCurrentSettings();
+    if (prefix === 'learn') s.learnLang = lang;
+    else if (prefix === 'trans1') s.transLang1 = lang;
+    else if (prefix === 'trans2') s.transLang2 = lang;
+    saveSettings(s);
+    renderLangSelectors();
+    updateMenuButtons();
+}
+
 // Learn
 function doLearn() {
     saveCurrentWord();
     showPage('learn');
+    if (!currentUser) return;
+
     const userData = getUser(currentUser);
     if (!userData) return;
     const learned = new Set(userData.words.map(w => w.word));
-    const available = Object.keys(LOCAL_DICT).filter(w => !learned.has(w));
+    const available = Object.keys(DICT).filter(w => !learned.has(w));
     if (!available.length) { showEmpty('You\'ve learned all words!\n已全部学完!'); return; }
 
     currentWord = available[Math.floor(Math.random() * available.length)];
-    const entry = LOCAL_DICT[currentWord];
-    document.getElementById('learn-word').textContent = currentWord.charAt(0).toUpperCase() + currentWord.slice(1);
-    document.getElementById('learn-malay').textContent = entry.malay;
-    document.getElementById('learn-chinese').textContent = entry.chinese;
-    document.getElementById('learn-definition').textContent = entry.definition;
+    renderLearnPage();
+}
+
+function renderLearnPage() {
+    const wordKey = currentWord;
+    const entry = DICT[wordKey];
+    if (!entry) return;
+
+    const settings = getCurrentSettings();
+    const learnLang = settings.learnLang;
+
+    document.getElementById('learn-word').textContent = wordKey.charAt(0).toUpperCase() + wordKey.slice(1);
+    document.getElementById('learn-def').textContent = entry.definition[learnLang] || '';
+    renderSentences(wordKey, 'learn-sentences');
+}
+
+function escapeHtml(str) {
+    return str.replace(/'/g, "\\'").replace(/\\/g, '\\\\');
+}
+
+// Render word + sentences panel (shared by learn, test, review)
+function renderSentences(wordKey, containerId) {
+    const entry = DICT[wordKey];
+    if (!entry) { document.getElementById(containerId).innerHTML = ''; return; }
+    const settings = getCurrentSettings();
+    const learnLang = settings.learnLang;
+    const container = document.getElementById(containerId);
+
+    // Use shuffled sentences if available
+    const sentences = _sentenceShuffle[containerId] || entry.sentence;
+
+    let html = '';
+
+    // Word sound button
+    const wordTts = LANGS[learnLang] ? LANGS[learnLang].tts : 'en-US';
+    html += `<div class="sentence-row">
+        <span class="sentence-lang">${LANGS[learnLang].native}</span>
+        <span class="sentence-text">${escapeHtml(wordKey)}</span>
+        <button class="sentence-btn" onclick="speakWord('${escapeHtml(wordKey)}','${wordTts}')"></button>
+    </div>`;
+
+    // Sentences: up to 3, show different languages
+    const seenLangs = new Set();
+
+    // Show learnLang sentence first if available
+    const learnSent = sentences.find(s => s.lang === learnLang);
+    if (learnSent) {
+        const tts = LANGS[learnLang].tts;
+        html += `<div class="sentence-row">
+            <span class="sentence-lang">${LANGS[learnLang].native}</span>
+            <span class="sentence-text">${escapeHtml(learnSent.text)}</span>
+            <button class="sentence-btn" onclick="speakWord('${escapeHtml(learnSent.text)}','${tts}')">🔊</button>
+        </div>`;
+        seenLangs.add(learnLang);
+    }
+
+    // Show sentences for trans1 and trans2
+    for (const tLang of [settings.transLang1, settings.transLang2]) {
+        if (seenLangs.size >= 3) break;
+        const sent = sentences.find(s => s.lang === tLang);
+        if (sent && !seenLangs.has(tLang)) {
+            const tts = LANGS[tLang] ? LANGS[tLang].tts : 'en-US';
+            html += `<div class="sentence-row">
+                <span class="sentence-lang">${LANGS[tLang].native}</span>
+                <span class="sentence-text">${escapeHtml(sent.text)}</span>
+                <button class="sentence-btn" onclick="speakWord('${escapeHtml(sent.text)}','${tts}')">🔊</button>
+            </div>`;
+            seenLangs.add(tLang);
+        }
+    }
+
+    // Fill remaining slots with any other languages
+    for (const sent of sentences) {
+        if (seenLangs.size >= 3) break;
+        if (!seenLangs.has(sent.lang)) {
+            const tts = LANGS[sent.lang] ? LANGS[sent.lang].tts : 'en-US';
+            html += `<div class="sentence-row">
+                <span class="sentence-lang">${LANGS[sent.lang].native}</span>
+                <span class="sentence-text">${escapeHtml(sent.text)}</span>
+                <button class="sentence-btn" onclick="speakWord('${escapeHtml(sent.text)}','${tts}')">🔊</button>
+            </div>`;
+            seenLangs.add(sent.lang);
+        }
+    }
+
+    // Regenerate button
+    html += `<div style="text-align:center;margin-top:8px;">
+        <button class="action-btn secondary" style="padding:8px 16px;font-size:13px;min-width:auto;" onclick="regenerateSentences('${wordKey}','${containerId}')">Regenerate Sentences</button>
+    </div>`;
+
+    container.innerHTML = html;
+}
+
+// Regenerate: shuffle sentences randomly
+let _sentenceShuffle = {};
+function regenerateSentences(wordKey, containerId) {
+    const entry = DICT[wordKey];
+    if (!entry || !entry.sentence) return;
+    _sentenceShuffle[containerId] = [...entry.sentence].sort(() => Math.random() - 0.5);
+    renderSentences(wordKey, containerId);
 }
 
 function saveCurrentWord() {
     if (currentWord && currentUser) {
-        const entry = LOCAL_DICT[currentWord];
-        addWord(currentUser, {
-            word: currentWord,
-            malay: entry.malay,
-            chinese: entry.chinese,
-            definition: entry.definition,
-            date: new Date().toISOString().slice(0, 19).replace('T', ' ')
-        });
+        addWord(currentUser, currentWord);
     }
 }
 
@@ -494,7 +817,7 @@ function saveAndBack() {
 function doTest() {
     showPage('test');
     document.getElementById('test-answer').classList.add('hidden');
-    document.getElementById('test-answer').textContent = '';
+    document.getElementById('test-answer').innerHTML = '';
 
     const userData = getUser(currentUser);
     if (!userData) return;
@@ -505,11 +828,19 @@ function doTest() {
     const w = userData.words[Math.floor(Math.random() * userData.words.length)];
     testData = w;
     document.getElementById('test-word').textContent = w.word.charAt(0).toUpperCase() + w.word.slice(1);
+    renderSentences(w.word, 'test-sentences');
 }
+
+let testData = {};
 
 function showTestAnswer() {
     const a = document.getElementById('test-answer');
-    a.textContent = `Malay: ${testData.malay}\nChinese: ${testData.chinese}`;
+    const settings = getCurrentSettings();
+    const t1 = settings.transLang1;
+    const t2 = settings.transLang2;
+    const tr1 = getTranslation(testData.word, t1);
+    const tr2 = getTranslation(testData.word, t2);
+    a.innerHTML = `${LANGS[t1].native}: ${tr1}<br>${LANGS[t2].native}: ${tr2}`;
     a.classList.remove('hidden');
 }
 
@@ -528,20 +859,29 @@ function doReview() {
     showReviewWord();
 }
 
+let reviewWords = [];
+let reviewIndex = 0;
+let reviewData = {};
+
 function showReviewWord() {
     const w = reviewWords[reviewIndex];
     document.getElementById('review-counter').textContent = `${reviewIndex + 1} / ${reviewWords.length}`;
     document.getElementById('review-word').textContent = w.word.charAt(0).toUpperCase() + w.word.slice(1);
     document.getElementById('review-answer').classList.add('hidden');
+    document.getElementById('review-answer').innerHTML = '';
     document.getElementById('review-time').textContent = `Learned at: ${w.date}`;
     reviewData = w;
+    renderSentences(w.word, 'review-sentences');
 }
-
-let reviewData = {};
 
 function showReviewAnswer() {
     const a = document.getElementById('review-answer');
-    a.textContent = `Malay: ${reviewData.malay}\nChinese: ${reviewData.chinese}`;
+    const settings = getCurrentSettings();
+    const t1 = settings.transLang1;
+    const t2 = settings.transLang2;
+    const tr1 = getTranslation(reviewData.word, t1);
+    const tr2 = getTranslation(reviewData.word, t2);
+    a.innerHTML = `${LANGS[t1].native}: ${tr1}<br>${LANGS[t2].native}: ${tr2}`;
     a.classList.remove('hidden');
 }
 
@@ -560,11 +900,11 @@ function showEmpty(msg) {
     showPage('empty');
 }
 
-function speakWord(text) {
+function speakWord(text, lang) {
     if (!text) return;
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'en-US';
+    u.lang = lang || 'en-US';
     u.rate = 0.85;
     speechSynthesis.speak(u);
 }
@@ -582,28 +922,20 @@ autoRestore();
 document.getElementById('version-badge').textContent = '(' + APP_VERSION + ')';
 updateMenuButtons();
 
-// PWA: Register service worker + update notification
+// PWA
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
         navigator.serviceWorker.register('./service-worker.js').then(function(reg) {
-            // Check for update every time page loads
             reg.update();
         });
     });
 
-    // When a new service worker is ready, show update banner
-    navigator.serviceWorker.addEventListener('controllerchange', function() {
-        // Page was reloaded by SW - just refresh
-    });
-
-    // Detect waiting update
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready.then(function(reg) {
             reg.addEventListener('updatefound', function() {
                 const newWorker = reg.installing;
                 newWorker.addEventListener('statechange', function() {
                     if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        // New version available, show banner
                         document.getElementById('update-banner').style.display = 'block';
                     }
                 });
