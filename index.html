@@ -1094,25 +1094,24 @@ function renderSentences(wordKey, containerId) {
     const learnLang = settings.learnLang;
     const container = document.getElementById(containerId);
 
-    // If we have a shuffled array, use it directly (take first 3)
-    let sentences;
+    // Always pick the 3 preset languages, shuffle their display order
+    const picked = [];
+    const seen = new Set();
+    const priorityLangs = [learnLang, settings.transLang1, settings.transLang2];
+    for (const pLang of priorityLangs) {
+        const sent = entry.sentence.find(s => s.lang === pLang);
+        if (sent && !seen.has(sent.lang)) { picked.push(sent); seen.add(sent.lang); }
+    }
+    // Fill with others if needed
+    for (const sent of entry.sentence) {
+        if (picked.length >= 3) break;
+        if (!seen.has(sent.lang)) { picked.push(sent); seen.add(sent.lang); }
+    }
+
+    // Shuffle the order if regenerated
+    let sentences = picked;
     if (_sentenceShuffle[containerId]) {
-        sentences = _sentenceShuffle[containerId].slice(0, 3);
-    } else {
-        // Default: pick learnLang + transLang1 + transLang2
-        const picked = [];
-        const seen = new Set();
-        const priorityLangs = [learnLang, settings.transLang1, settings.transLang2];
-        for (const pLang of priorityLangs) {
-            const sent = entry.sentence.find(s => s.lang === pLang);
-            if (sent && !seen.has(sent.lang)) { picked.push(sent); seen.add(sent.lang); }
-        }
-        // Fill with others if needed
-        for (const sent of entry.sentence) {
-            if (picked.length >= 3) break;
-            if (!seen.has(sent.lang)) { picked.push(sent); seen.add(sent.lang); }
-        }
-        sentences = picked;
+        sentences = [...picked].sort(function() { return Math.random() - 0.5; });
     }
 
     let html = '';
@@ -1144,9 +1143,10 @@ function renderSentences(wordKey, containerId) {
 function regenerateSentences(wordKey, containerId) {
     const entry = DICT[wordKey];
     if (!entry || !entry.sentence) return;
-    // Shuffle all sentences and pick 3 random ones
-    _sentenceShuffle[containerId] = [...entry.sentence].sort(function() { return Math.random() - 0.5; });
+    // Mark as shuffled - renderSentences will randomize the display order
+    _sentenceShuffle[containerId] = true;
     renderSentences(wordKey, containerId);
+}
 }
 
 function saveCurrentWord() {
