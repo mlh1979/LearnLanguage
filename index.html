@@ -151,6 +151,14 @@
                 <span class="btn-zh">选择用户</span>
             </button>
         </div>
+        <div class="section-label">Quick Actions</div>
+        <div class="btn-grid" style="padding:0;">
+            <button class="menu-btn" onclick="doTranslate()">
+                <span class="btn-en">Translate Text</span>
+                <span class="btn-zh">翻译</span>
+                <span class="btn-ms">Terjemah Teks</span>
+            </button>
+        </div>
         <div class="section-label" id="data-section-label">Data Management</div>
         <div class="data-btns" id="data-btns" style="display:none;">
             <button class="data-btn" onclick="exportUser()">Export Data</button>
@@ -1038,7 +1046,27 @@ function renderSentences(wordKey, containerId) {
     const settings = getCurrentSettings();
     const learnLang = settings.learnLang;
     const container = document.getElementById(containerId);
-    const sentences = _sentenceShuffle[containerId] || entry.sentence;
+
+    // If we have a shuffled array, use it directly (take first 3)
+    let sentences;
+    if (_sentenceShuffle[containerId]) {
+        sentences = _sentenceShuffle[containerId].slice(0, 3);
+    } else {
+        // Default: pick learnLang + transLang1 + transLang2
+        const picked = [];
+        const seen = new Set();
+        const priorityLangs = [learnLang, settings.transLang1, settings.transLang2];
+        for (const pLang of priorityLangs) {
+            const sent = entry.sentence.find(s => s.lang === pLang);
+            if (sent && !seen.has(sent.lang)) { picked.push(sent); seen.add(sent.lang); }
+        }
+        // Fill with others if needed
+        for (const sent of entry.sentence) {
+            if (picked.length >= 3) break;
+            if (!seen.has(sent.lang)) { picked.push(sent); seen.add(sent.lang); }
+        }
+        sentences = picked;
+    }
 
     let html = '';
 
@@ -1050,47 +1078,13 @@ function renderSentences(wordKey, containerId) {
         <button class="sentence-btn" onclick="speakWord('${escapeHtml(wordKey)}','${wordTts}')">🔊</button>
     </div>`;
 
-    const seenLangs = new Set();
-
-    // Learn language sentence
-    const learnSent = sentences.find(s => s.lang === learnLang);
-    if (learnSent) {
-        const tts = LANGS[learnLang].tts;
-        html += `<div class="sentence-row">
-            <span class="sentence-lang">${LANGS[learnLang].native}</span>
-            <span class="sentence-text">${escapeHtml(learnSent.text)}</span>
-            <button class="sentence-btn" onclick="speakWord('${escapeHtml(learnSent.text)}','${tts}')">🔊</button>
-        </div>`;
-        seenLangs.add(learnLang);
-    }
-
-    // Translation sentences
-    for (const tLang of [settings.transLang1, settings.transLang2]) {
-        if (seenLangs.size >= 3) break;
-        const sent = sentences.find(s => s.lang === tLang);
-        if (sent && !seenLangs.has(tLang)) {
-            const tts = LANGS[tLang] ? LANGS[tLang].tts : 'en-US';
-            html += `<div class="sentence-row">
-                <span class="sentence-lang">${LANGS[tLang].native}</span>
-                <span class="sentence-text">${escapeHtml(sent.text)}</span>
-                <button class="sentence-btn" onclick="speakWord('${escapeHtml(sent.text)}','${tts}')">🔊</button>
-            </div>`;
-            seenLangs.add(tLang);
-        }
-    }
-
-    // Fill with other langs
     for (const sent of sentences) {
-        if (seenLangs.size >= 3) break;
-        if (!seenLangs.has(sent.lang)) {
-            const tts = LANGS[sent.lang] ? LANGS[sent.lang].tts : 'en-US';
-            html += `<div class="sentence-row">
-                <span class="sentence-lang">${LANGS[sent.lang].native}</span>
-                <span class="sentence-text">${escapeHtml(sent.text)}</span>
-                <button class="sentence-btn" onclick="speakWord('${escapeHtml(sent.text)}','${tts}')">🔊</button>
-            </div>`;
-            seenLangs.add(sent.lang);
-        }
+        const tts = LANGS[sent.lang] ? LANGS[sent.lang].tts : 'en-US';
+        html += `<div class="sentence-row">
+            <span class="sentence-lang">${LANGS[sent.lang].native}</span>
+            <span class="sentence-text">${escapeHtml(sent.text)}</span>
+            <button class="sentence-btn" onclick="speakWord('${escapeHtml(sent.text)}','${tts}')">🔊</button>
+        </div>`;
     }
 
     html += `<div style="text-align:center;margin-top:8px;">
@@ -1103,7 +1097,11 @@ function renderSentences(wordKey, containerId) {
 function regenerateSentences(wordKey, containerId) {
     const entry = DICT[wordKey];
     if (!entry || !entry.sentence) return;
-    _sentenceShuffle[containerId] = [...entry.sentence].sort(() => Math.random() - 0.5);
+    const settings = getCurrentSettings();
+    // Filter out the learn language and trans languages to get pool of random sentences
+    const excluded = new Set([settings.learnLang, settings.transLang1, settings.transLang2]);
+    const pool = entry.sentence.filter(s => excluded.has(s.lang));
+    _sentenceShuffle[containerId] = pool.length > 0 ? [...pool].sort(function() { return Math.random() - 0.5; }) : [...entry.sentence].sort(function() { return Math.random() - 0.5; });
     renderSentences(wordKey, containerId);
 }
 
@@ -1246,10 +1244,14 @@ async function doTranslateText() {
 }
 
 async function translateText(text, targetLang) {
-    const resp = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=auto|${targetLang}`);
+    const resp = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`);
     const data = await resp.json();
-    if (data.responseStatus === 200 && data.responseData) {
-        return data.responseData.translatedText;
+    if (data && data[0]) {
+        let translated = '';
+        for (const part of data[0]) {
+            if (part[0]) translated += part[0];
+        }
+        return translated;
     }
     throw new Error('Translation unavailable');
 }
