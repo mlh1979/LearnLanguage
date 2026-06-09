@@ -167,6 +167,17 @@
             <input type="file" id="import-file" accept=".json" style="display:none" onchange="importUser(event)">
         </div>
         <button class="action-btn secondary back-btn" style="margin-top:20px;" onclick="showPage('menu')">Back to Menu</button>
+        <button class="action-btn secondary back-btn" style="margin-top:10px;font-size:12px;padding:6px 12px;opacity:0.5;" onclick="showDebugLog()">Debug Log</button>
+    </div>
+
+    <!-- Debug Log -->
+    <div id="debug-log" class="page hidden">
+        <h2>Debug Log</h2>
+        <div id="debug-content" style="background:#f5f5f5;border-radius:8px;padding:12px;max-height:400px;overflow-y:auto;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;"></div>
+        <div class="btn-row">
+            <button class="action-btn" onclick="clearDebugLog()">Clear Log</button>
+            <button class="action-btn secondary" onclick="showPage('settings')">Back</button>
+        </div>
     </div>
 
     <!-- Create User -->
@@ -260,7 +271,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.0.2';
+const APP_VERSION = 'v1.0.0.3';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -837,6 +848,30 @@ function saveSettings(s) {
     saveUsers(all);
 }
 
+// Debug log
+function logEvent(msg) {
+    var key = 'el_debug_log';
+    var entries = [];
+    try { entries = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}
+    var ts = new Date().toLocaleTimeString();
+    entries.push('[' + ts + '] ' + msg);
+    if (entries.length > 200) entries = entries.slice(-200);
+    localStorage.setItem(key, JSON.stringify(entries));
+    console.log('[App Debug] ' + msg);
+}
+
+function showDebugLog() {
+    showPage('debug-log');
+    var entries = [];
+    try { entries = JSON.parse(localStorage.getItem('el_debug_log') || '[]'); } catch {}
+    document.getElementById('debug-content').textContent = entries.join('\n');
+}
+
+function clearDebugLog() {
+    localStorage.removeItem('el_debug_log');
+    document.getElementById('debug-content').textContent = '(Log cleared)';
+}
+
 // Data layer
 function getUsers() {
     try { return JSON.parse(localStorage.getItem('el_users') || '{}'); } catch { return {}; }
@@ -917,26 +952,37 @@ function importUser(event) {
 }
 
 function autoRestore() {
-    // Migrate old words format (array) to new format (object by learnLang)
-    migrateWords();
-    const last = localStorage.getItem('el_last_user');
-    if (last && getUser(last)) {
-        currentUser = last;
-    } else {
-        // Auto-create guest profile if no user exists
-        const users = getUsers();
-        if (Object.keys(users).length === 0) {
-            const guestName = 'Guest';
-            createUser(guestName);
-            currentUser = guestName;
-            localStorage.setItem('el_last_user', guestName);
-        } else if (!last || !getUser(last)) {
-            // If last_user is invalid, pick first user
-            const firstUser = Object.keys(users)[0];
-            currentUser = firstUser;
-            localStorage.setItem('el_last_user', firstUser);
+    logEvent('autoRestore started');
+    try {
+        // Migrate old words format (array) to new format (object by learnLang)
+        migrateWords();
+        logEvent('migrateWords done');
+        const last = localStorage.getItem('el_last_user');
+        logEvent('el_last_user = ' + JSON.stringify(last));
+        if (last && getUser(last)) {
+            currentUser = last;
+            logEvent('Restored last user: ' + last);
+        } else {
+            const users = getUsers();
+            var userKeys = Object.keys(users);
+            logEvent('Users found: ' + JSON.stringify(userKeys));
+            if (userKeys.length === 0) {
+                var guestName = 'Guest';
+                createUser(guestName);
+                currentUser = guestName;
+                localStorage.setItem('el_last_user', guestName);
+                logEvent('No users, created Guest profile');
+            } else if (!last || !getUser(last)) {
+                var firstUser = userKeys[0];
+                currentUser = firstUser;
+                localStorage.setItem('el_last_user', firstUser);
+                logEvent('Last user invalid, picked first: ' + firstUser);
+            }
         }
+    } catch (e) {
+        logEvent('autoRestore ERROR: ' + e.message);
     }
+    logEvent('autoRestore done, currentUser = ' + JSON.stringify(currentUser));
 }
 
 function migrateWords() {
@@ -983,7 +1029,9 @@ function showPage(id) {
 }
 
 function updateMenuButtons() {
+    logEvent('updateMenuButtons, currentUser=' + JSON.stringify(currentUser));
     const hasUsers = Object.keys(getUsers()).length > 0;
+    logEvent('hasUsers=' + hasUsers + ', users=' + JSON.stringify(Object.keys(getUsers())));
     document.getElementById('menu-btn-create').style.display = hasUsers ? 'none' : 'flex';
     document.getElementById('menu-btn-select').style.display = hasUsers ? 'none' : 'flex';
     ['btn-learn', 'btn-test', 'btn-review', 'btn-translate'].forEach(id => {
@@ -1502,6 +1550,9 @@ window.exportUser = exportUser;
 window.importUser = importUser;
 
 // Init
+logEvent('=== Page loaded ===');
+logEvent('User Agent: ' + navigator.userAgent);
+logEvent('onLine: ' + navigator.onLine);
 autoRestore();
 updateMenuButtons();
 if (navigator.onLine) { refreshCachedWords(); }
