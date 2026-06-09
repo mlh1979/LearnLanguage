@@ -1,4 +1,4 @@
-const CACHE_NAME = 'el-cache-v12';
+const CACHE_NAME = 'el-cache-v13';
 const FILES = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', function(e) {

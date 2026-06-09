@@ -91,50 +91,15 @@
     <!-- Menu -->
     <div id="menu" class="page">
         <div class="btn-grid">
-            <button class="menu-btn" id="menu-btn-settings" onclick="showPage('settings')">
-                <span class="btn-en">Settings</span>
-                <span class="btn-zh">设置</span>
-                <span class="btn-ms">Tetapan</span>
-            </button>
-            <button class="menu-btn" id="menu-btn-create" onclick="showPage('create-user')" style="display:none;">
-                <span class="btn-en">Create New User</span>
-                <span class="btn-zh">创建用户</span>
-                <span class="btn-ms">Cipta Pengguna</span>
-            </button>
-            <button class="menu-btn" id="menu-btn-select" onclick="showPage('select-user')" style="display:none;">
-                <span class="btn-en">Select User</span>
-                <span class="btn-zh">选择用户</span>
-                <span class="btn-ms">Pilih Pengguna</span>
-            </button>
-            <button class="menu-btn" id="btn-learn" onclick="doLearn()" disabled>
-                <span class="btn-en">Learn a Word</span>
-                <span class="btn-zh">学习单词</span>
-                <span class="btn-ms">Belajar Perkataan</span>
-            </button>
-            <button class="menu-btn" id="btn-test" onclick="doTest()" disabled>
-                <span class="btn-en">Test</span>
-                <span class="btn-zh">测试</span>
-                <span class="btn-ms">Ujian</span>
-            </button>
-            <button class="menu-btn" id="btn-review" onclick="doReview()" disabled>
-                <span class="btn-en">Review Today</span>
-                <span class="btn-zh">今日复习</span>
-                <span class="btn-ms">Semak Hari Ini</span>
-            </button>
-            <button class="menu-btn" id="btn-translate" onclick="doTranslate()" disabled>
-                <span class="btn-en">Translate</span>
-                <span class="btn-zh">翻译</span>
-                <span class="btn-ms">Terjemah</span>
-            </button>
-            <button class="menu-btn quit-btn" onclick="alert('Close the browser tab to quit.')">
-                <span class="btn-en">Quit</span>
-                <span class="btn-zh">退出</span>
-                <span class="btn-ms">Keluar</span>
-            </button>
-            <button class="menu-btn" style="opacity:0.4;font-size:12px;padding:10px 16px;" onclick="showDebugLog()">
-                <span class="btn-en">Debug Log</span>
-                <span class="btn-zh">调试日志</span>
-            </button>
+            <button class="menu-btn" id="menu-btn-settings" onclick="showPage('settings')"></button>
+            <button class="menu-btn" id="menu-btn-create" onclick="showPage('create-user')" style="display:none;"></button>
+            <button class="menu-btn" id="menu-btn-select" onclick="showPage('select-user')" style="display:none;"></button>
+            <button class="menu-btn" id="btn-learn" onclick="doLearn()" disabled></button>
+            <button class="menu-btn" id="btn-test" onclick="doTest()" disabled></button>
+            <button class="menu-btn" id="btn-review" onclick="doReview()" disabled></button>
+            <button class="menu-btn" id="btn-translate" onclick="doTranslate()" disabled></button>
+            <button class="menu-btn quit-btn" onclick="alert('Close the browser tab to quit.')"></button>
+            <button class="menu-btn" id="btn-debug" style="opacity:0.4;font-size:12px;padding:10px 16px;" onclick="showDebugLog()"></button>
         </div>
     </div>
 
@@ -279,7 +244,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.2.7';
+const APP_VERSION = 'v1.0.2.8';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -302,6 +267,18 @@ const LANGS = {
     pt: { name: 'Portuguese', native: 'Português', tts: 'pt-PT' },
     it: { name: 'Italian', native: 'Italiano', tts: 'it-IT' },
     nl: { name: 'Dutch', native: 'Nederlands', tts: 'nl-NL' },
+};
+
+const MENU_LABELS = {
+    'menu-btn-settings': { en: 'Settings', zh: '设置', zhTW: '設定', ms: 'Tetapan', ta: 'அமைப்புகள்', ja: '設定', ko: '설정', th: 'การตั้งค่า', vi: 'Cài đặt', id: 'Tetapan', es: 'Configuración', fr: 'Paramètres', de: 'Einstellungen', ar: 'إعدادات', ru: 'Настройки', pt: 'Configurações', it: 'Impostazioni', nl: 'Instellingen' },
+    'menu-btn-create': { en: 'Create New User', zh: '创建用户', zhTW: '建立使用者', ms: 'Cipta Pengguna', ta: 'புதிய பயனரை உருவாக்கு', ja: '新規ユーザー作成', ko: '새 사용자 만들기', th: 'สร้างผู้ใช้ใหม่', vi: 'Tạo người dùng mới', id: 'Cipta Pengguna', es: 'Crear Usuario', fr: 'Créer Utilisateur', de: 'Benutzer erstellen', ar: 'إنشاء مستخدم', ru: 'Создать пользователя', pt: 'Criar Usuário', it: 'Crea Utente', nl: 'Gebruiker Aanmaken' },
+    'menu-btn-select': { en: 'Select User', zh: '选择用户', zhTW: '選擇使用者', ms: 'Pilih Pengguna', ta: 'பயனரை தேர்வு செய்', ja: 'ユーザー選択', ko: '사용자 선택', th: 'เลือกผู้ใช้', vi: 'Chọn người dùng', id: 'Pilih Pengguna', es: 'Seleccionar Usuario', fr: 'Sélectionner Utilisateur', de: 'Benutzer wählen', ar: 'اختيار مستخدم', ru: 'Выбрать пользователя', pt: 'Selecionar Usuário', it: 'Seleziona Utente', nl: 'Gebruiker Selecteren' },
+    'btn-learn': { en: 'Learn a Word', zh: '学习单词', zhTW: '學習單詞', ms: 'Belajar Perkataan', ta: 'ஒரு சொல் கற்றுக்கொள்', ja: '単語を学ぶ', ko: '단어 배우기', th: 'เรียนคำศัพท์', vi: 'Học từ mới', id: 'Belajar Perkataan', es: 'Aprender Palabra', fr: 'Apprendre un Mot', de: 'Wort lernen', ar: 'تعلم كلمة', ru: 'Выучить слово', pt: 'Aprender Palavra', it: 'Impara Parola', nl: 'Woord Leren' },
+    'btn-test': { en: 'Test', zh: '测试', zhTW: '測驗', ms: 'Ujian', ta: 'சோதனை', ja: 'テスト', ko: '테스트', th: 'ทดสอบ', vi: 'Kiểm tra', id: 'Ujian', es: 'Prueba', fr: 'Test', de: 'Test', ar: 'اختبار', ru: 'Тест', pt: 'Teste', it: 'Test', nl: 'Test' },
+    'btn-review': { en: 'Review Today', zh: '今日复习', zhTW: '今日複習', ms: 'Semak Hari Ini', ta: 'இன்று மீள்பார்வை', ja: '今日の復習', ko: '오늘 복습', th: 'ทบทวนวันนี้', vi: 'Ôn tập hôm nay', id: 'Semak Hari Ini', es: 'Repasar Hoy', fr: 'Réviser Aujourd\'hui', de: 'Heute wiederholen', ar: 'مراجعة اليوم', ru: 'Повторить сегодня', pt: 'Revisar Hoje', it: 'Rivedi Oggi', nl: 'Vandaag Herhalen' },
+    'btn-translate': { en: 'Translate', zh: '翻译', zhTW: '翻譯', ms: 'Terjemah', ta: 'மொழிபெயர்', ja: '翻訳', ko: '번역', th: 'แปลภาษา', vi: 'Dịch', id: 'Terjemah', es: 'Traducir', fr: 'Traduire', de: 'Übersetzen', ar: 'ترجمة', ru: 'Перевести', pt: 'Traduzir', it: 'Traduci', nl: 'Vertalen' },
+    'btn-quit': { en: 'Quit', zh: '退出', zhTW: '離開', ms: 'Keluar', ta: 'வெளியேறு', ja: '終了', ko: '종료', th: 'ออก', vi: 'Thoát', id: 'Keluar', es: 'Salir', fr: 'Quitter', de: 'Beenden', ar: 'خروج', ru: 'Выйти', pt: 'Sair', it: 'Esci', nl: 'Afsluiten' },
+    'btn-debug': { en: 'Debug Log', zh: '调试日志', zhTW: '偵錯日誌', ms: 'Log Nyahpepijat', ta: 'பிழைதிருத்த பதிவு', ja: 'デバッグログ', ko: '디버그 로그', th: 'บันทึกดีบัก', vi: 'Nhật ký Gỡ lỗi', id: 'Log Nyahpepijat', es: 'Registro Depuración', fr: 'Journal Débogage', de: 'Debug-Protokoll', ar: 'سجل التصحيح', ru: 'Журнал отладки', pt: 'Log Depuração', it: 'Log Debug', nl: 'Debug-log' },
 };
 
 const DICT = {
@@ -1074,9 +1051,28 @@ function updateMenuButtons() {
     document.getElementById('data-section-label').style.display = currentUser ? '' : 'none';
     document.getElementById('lang-settings').classList.toggle('hidden', !currentUser);
     const settings = getCurrentSettings();
-    const langName = LANGS[settings.learnLang] ? LANGS[settings.learnLang].name : 'Language';
-    document.getElementById('app-title-text').innerHTML = `Learn Language <span id="version-badge">${'(' + APP_VERSION + ')'}</span>`;
     document.getElementById('version-badge').textContent = '(' + APP_VERSION + ')';
+    // Render menu labels based on current language settings
+    const labelLangs = currentUser
+        ? [settings.learnLang, settings.transLang1, settings.transLang2]
+        : ['en', 'zh', 'ms'];
+    var btnMap = { 'btn-quit': 'btn-quit' };
+    var menuBtns = ['menu-btn-settings', 'menu-btn-create', 'menu-btn-select', 'btn-learn', 'btn-test', 'btn-review', 'btn-translate', 'btn-quit', 'btn-debug'];
+    for (var mi = 0; mi < menuBtns.length; mi++) {
+        var btnId = menuBtns[mi];
+        var el = document.getElementById(btnId);
+        if (!el) continue;
+        var labels = MENU_LABELS[btnId];
+        if (!labels) continue;
+        var html = '';
+        for (var li = 0; li < labelLangs.length; li++) {
+            var ll = labelLangs[li];
+            var text = labels[ll] || labels['en'] || '';
+            var cls = li === 0 ? 'btn-en' : (li === 1 ? 'btn-zh' : 'btn-ms');
+            html += '<span class="' + cls + '">' + text + '</span>';
+        }
+        el.innerHTML = html;
+    }
 }
 
 function createUserAction() {
