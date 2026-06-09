@@ -260,7 +260,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.0.1';
+const APP_VERSION = 'v1.0.0.2';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -922,8 +922,20 @@ function autoRestore() {
     const last = localStorage.getItem('el_last_user');
     if (last && getUser(last)) {
         currentUser = last;
-        updateMenuButtons();
-        renderLangSelectors();
+    } else {
+        // Auto-create guest profile if no user exists
+        const users = getUsers();
+        if (Object.keys(users).length === 0) {
+            const guestName = 'Guest';
+            createUser(guestName);
+            currentUser = guestName;
+            localStorage.setItem('el_last_user', guestName);
+        } else if (!last || !getUser(last)) {
+            // If last_user is invalid, pick first user
+            const firstUser = Object.keys(users)[0];
+            currentUser = firstUser;
+            localStorage.setItem('el_last_user', firstUser);
+        }
     }
 }
 
