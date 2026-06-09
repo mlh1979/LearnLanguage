@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4a6cf7">
-    <title id="app-title">Language Learning</title>
+    <title>Language Learning</title>
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
     <link rel="apple-touch-icon" href="./icon-192.png">
@@ -47,16 +47,12 @@
         .no-users { text-align: center; color: #888; padding: 20px; }
         .status-badge { text-align: center; font-size: 12px; color: #888; margin-bottom: 10px; }
         .word-display { font-size: 36px; font-weight: 700; text-align: center; padding: 20px 0 10px; color: #1a1a2e; }
-        .translate-row { font-size: 22px; text-align: center; padding: 6px 0; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .translate-label { font-size: 13px; color: #888; font-weight: 600; min-width: 28px; }
-        .translate-text { color: #333; }
         .definition { font-size: 14px; text-align: center; color: #666; padding: 10px 16px; background: #f8f9fa; border-radius: 8px; margin-bottom: 16px; line-height: 1.5; }
         .sentence-panel { margin: 12px 0; }
-        .sentence-panel-title { font-size: 13px; color: #888; font-weight: 600; margin-bottom: 6px; text-align: center; }
         .sentence-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 6px; }
         .sentence-lang { font-size: 11px; color: #6366f1; font-weight: 700; min-width: 24px; }
         .sentence-text { flex: 1; font-size: 14px; color: #444; line-height: 1.4; }
-        .sentence-btn { background: none; border: 1px solid #d0d0d0; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 13px; color: #6366f1; white-space: nowrap; }
+        .sentence-btn { background: none; border: 1px solid #d0d0d0; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: #6366f1; white-space: nowrap; line-height: 1; }
         .sentence-btn:hover { background: #eef1ff; border-color: #6366f1; }
         .answer-box { background: #fef3c7; border-radius: 10px; padding: 16px 20px; font-size: 18px; text-align: center; line-height: 1.6; margin: 12px 0; }
         .counter { text-align: center; font-size: 14px; color: #888; margin-bottom: 5px; }
@@ -73,11 +69,10 @@
         .lang-btn.active { background: #eef1ff; border-color: #4a6cf7; color: #4a6cf7; }
         .lang-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 12px; flex-wrap: wrap; }
         .lang-label { font-size: 12px; color: #888; text-align: center; margin-bottom: 6px; font-weight: 600; }
-        /* Language selector panel */
-        .lang-selector { background: #f8f9fa; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .section-label { font-size: 13px; color: #888; font-weight: 600; margin: 16px 0 8px; text-align: center; }
         #update-banner { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #4a6cf7; color: white; padding: 12px 20px; text-align: center; z-index: 9999; }
         #update-banner button { background: white; color: #4a6cf7; border: none; padding: 6px 16px; border-radius: 6px; font-weight: 600; margin-left: 10px; cursor: pointer; }
-        @media (max-width: 480px) { #app { max-width: 100%; } .word-display { font-size: 28px; } .translate-row { font-size: 18px; } .action-btn { min-width: 100px; padding: 10px 16px; font-size: 14px; } }
+        @media (max-width: 480px) { #app { max-width: 100%; } .word-display { font-size: 28px; } .action-btn { min-width: 100px; padding: 10px 16px; font-size: 14px; } }
     </style>
 </head>
 <body>
@@ -89,23 +84,18 @@
 
     <!-- Menu -->
     <div id="menu" class="page">
-        <!-- Language Settings Panel -->
-        <div id="lang-settings" class="lang-selector hidden">
-            <div class="lang-label">Learn Language</div>
-            <div class="lang-row" id="lang-learn-row"></div>
-            <div class="lang-label">Translate to</div>
-            <div class="lang-row" id="lang-trans1-row"></div>
-            <div class="lang-label">Translate to (2nd)</div>
-            <div class="lang-row" id="lang-trans2-row"></div>
-        </div>
-
         <div class="btn-grid">
-            <button class="menu-btn" onclick="showPage('create-user')">
+            <button class="menu-btn" id="menu-btn-settings" onclick="showPage('settings')">
+                <span class="btn-en">Settings</span>
+                <span class="btn-zh">设置</span>
+                <span class="btn-ms">Tetapan</span>
+            </button>
+            <button class="menu-btn" id="menu-btn-create" onclick="showPage('create-user')" style="display:none;">
                 <span class="btn-en">Create New User</span>
                 <span class="btn-zh">创建用户</span>
                 <span class="btn-ms">Cipta Pengguna</span>
             </button>
-            <button class="menu-btn" onclick="showPage('select-user')">
+            <button class="menu-btn" id="menu-btn-select" onclick="showPage('select-user')" style="display:none;">
                 <span class="btn-en">Select User</span>
                 <span class="btn-zh">选择用户</span>
                 <span class="btn-ms">Pilih Pengguna</span>
@@ -138,6 +128,32 @@
         </div>
     </div>
 
+    <!-- Settings -->
+    <div id="settings" class="page hidden">
+        <h2>Settings</h2>
+        <p class="subtitle">设置 / Tetapan</p>
+        <div class="lang-selector" id="lang-settings">
+            <div class="lang-label">Learn Language</div>
+            <div class="lang-row" id="lang-learn-row"></div>
+            <div class="lang-label">Translate to</div>
+            <div class="lang-row" id="lang-trans1-row"></div>
+            <div class="lang-label">Translate to (2nd)</div>
+            <div class="lang-row" id="lang-trans2-row"></div>
+        </div>
+        <div class="section-label">User Management</div>
+        <div class="btn-grid" style="padding:0;">
+            <button class="menu-btn" onclick="showPage('create-user')">
+                <span class="btn-en">Create New User</span>
+                <span class="btn-zh">创建用户</span>
+            </button>
+            <button class="menu-btn" onclick="showPage('select-user')">
+                <span class="btn-en">Select User</span>
+                <span class="btn-zh">选择用户</span>
+            </button>
+        </div>
+        <button class="action-btn secondary back-btn" style="margin-top:20px;" onclick="showPage('menu')">Back to Menu</button>
+    </div>
+
     <!-- Create User -->
     <div id="create-user" class="page hidden">
         <h2>Create New User</h2>
@@ -145,7 +161,7 @@
         <input type="text" id="new-name" placeholder="Enter your name" onkeydown="if(event.key==='Enter')createUserAction()">
         <div class="btn-row">
             <button class="action-btn" onclick="createUserAction()">Create</button>
-            <button class="action-btn secondary" onclick="showPage('menu')">Back</button>
+            <button class="action-btn secondary" onclick="showPage('settings')">Back</button>
         </div>
     </div>
 
@@ -155,7 +171,7 @@
         <p class="subtitle">选择用户 / Pilih Pengguna</p>
         <div id="user-list"></div>
         <div class="btn-row">
-            <button class="action-btn secondary" onclick="showPage('menu')">Back</button>
+            <button class="action-btn secondary" onclick="showPage('settings')">Back</button>
         </div>
     </div>
 
@@ -176,7 +192,7 @@
         <div class="status-badge">Test</div>
         <div id="test-word" class="word-display"></div>
         <div id="test-answer" class="answer-box hidden"></div>
-        <div id="test-sentences" class="sentence-panel"></div>
+        <div id="test-sentences" class="sentence-panel hidden"></div>
         <div class="btn-row">
             <button class="action-btn" onclick="showTestAnswer()">Show Answer</button>
         </div>
@@ -192,7 +208,7 @@
         <div id="review-counter" class="counter"></div>
         <div id="review-word" class="word-display"></div>
         <div id="review-answer" class="answer-box hidden"></div>
-        <div id="review-sentences" class="sentence-panel"></div>
+        <div id="review-sentences" class="sentence-panel hidden"></div>
         <div id="review-time" class="time-info"></div>
         <div class="btn-row">
             <button class="action-btn" onclick="showReviewAnswer()">Show Answer</button>
@@ -216,11 +232,10 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v2.0.0.0';
+const APP_VERSION = 'v2.0.0.1';
 document.title = 'Language Learning (' + APP_VERSION + ')';
 // ============================
 
-// Language definitions
 const LANGS = {
     en: { name: 'English', native: 'English', tts: 'en-US' },
     zh: { name: 'Chinese', native: '中文', tts: 'zh-CN' },
@@ -229,8 +244,6 @@ const LANGS = {
     ja: { name: 'Japanese', native: '日本語', tts: 'ja-JP' },
 };
 
-// Multi-language dictionary
-// Each word: { definition: {lang: text}, sentence: [{lang, text}], translations: {lang: text} }
 const DICT = {
     "abandon": {
         definition: { en: "to leave something or someone behind", zh: "放弃", ms: "meninggalkan", ta: "கைவிடு", ja: "放棄する" },
@@ -458,22 +471,13 @@ const DICT = {
             { lang: 'en', text: "Wisdom comes with age." },
             { lang: 'zh', text: "智慧随年龄而来。" },
             { lang: 'ms', text: "Kebijaksanaan datang dengan usia." },
-            { lang: 'ta', text: "வயதுடன் ஞானம் வருகிறது." },
+            { lang: 'ta', text: "வயதுடன் ானம் வருகிறது." },
             { lang: 'ja', text: "知恵は年とともに来る。" },
         ],
         translations: { zh: "智慧", ms: "kebijaksanaan", ta: "ஞானம்", ja: "知恵" },
     },
 };
 
-// Get definition text for current settings
-function getDefinition(wordKey) {
-    const entry = DICT[wordKey];
-    if (!entry) return '';
-    const lang = currentUser ? getCurrentSettings().learnLang : 'en';
-    return entry.definition[lang] || entry.definition.en || '';
-}
-
-// Get translation for a word in a target language
 function getTranslation(wordKey, targetLang) {
     const entry = DICT[wordKey];
     if (!entry) return '';
@@ -481,14 +485,6 @@ function getTranslation(wordKey, targetLang) {
     return entry.definition[targetLang] || '';
 }
 
-// Get sentences filtered to relevant languages
-function getSentences(wordKey) {
-    const entry = DICT[wordKey];
-    if (!entry || !entry.sentence) return [];
-    return entry.sentence;
-}
-
-// User settings helpers
 const DEFAULT_SETTINGS = { learnLang: 'en', transLang1: 'zh', transLang2: 'ms' };
 
 function getCurrentSettings() {
@@ -505,7 +501,7 @@ function saveSettings(s) {
     saveUsers(all);
 }
 
-// Data layer (localStorage)
+// Data layer
 function getUsers() {
     try { return JSON.parse(localStorage.getItem('el_users') || '{}'); } catch { return {}; }
 }
@@ -524,7 +520,6 @@ function deleteUser(name) {
 function addWord(username, wordKey) {
     const u = getUsers();
     if (!u[username]) return;
-    // Check if already saved
     if (u[username].words.find(w => w.word === wordKey)) return;
     u[username].words.push({ word: wordKey, date: new Date().toISOString().slice(0, 19).replace('T', ' ') });
     saveUsers(u);
@@ -567,14 +562,12 @@ function importUser(event) {
             localStorage.setItem('el_last_user', data.name);
             updateMenuButtons();
             renderLangSelectors();
-            alert(`Imported user "${data.name}" with ${data.words.length} words!`);
         } catch { alert('Failed to read file!'); }
     };
     reader.readAsText(file);
     event.target.value = '';
 }
 
-// Restore last user on load
 function autoRestore() {
     const last = localStorage.getItem('el_last_user');
     if (last && getUser(last)) {
@@ -587,6 +580,11 @@ function autoRestore() {
 // State
 let currentUser = null;
 let currentWord = null;
+let testData = {};
+let reviewWords = [];
+let reviewIndex = 0;
+let reviewData = {};
+let _sentenceShuffle = {};
 
 // Navigation
 function showPage(id) {
@@ -594,9 +592,13 @@ function showPage(id) {
     document.getElementById(id).classList.remove('hidden');
     if (id === 'menu') updateMenuButtons();
     if (id === 'select-user') loadUserList();
+    if (id === 'settings') renderLangSelectors();
 }
 
 function updateMenuButtons() {
+    const hasUsers = Object.keys(getUsers()).length > 0;
+    document.getElementById('menu-btn-create').style.display = hasUsers ? 'none' : 'flex';
+    document.getElementById('menu-btn-select').style.display = hasUsers ? 'none' : 'flex';
     ['btn-learn', 'btn-test', 'btn-review'].forEach(id => {
         document.getElementById(id).disabled = !currentUser;
     });
@@ -605,14 +607,12 @@ function updateMenuButtons() {
         : 'No user selected';
     document.getElementById('data-btns').classList.toggle('hidden', !currentUser);
     document.getElementById('lang-settings').classList.toggle('hidden', !currentUser);
-    // Update app title based on learn language
     const settings = getCurrentSettings();
     const langName = LANGS[settings.learnLang] ? LANGS[settings.learnLang].name : 'Language';
     document.getElementById('app-title-text').innerHTML = `${langName} Learning <span id="version-badge">${'(' + APP_VERSION + ')'}</span>`;
     document.getElementById('version-badge').textContent = '(' + APP_VERSION + ')';
 }
 
-// Create User
 function createUserAction() {
     const name = document.getElementById('new-name').value.trim();
     if (!name) return;
@@ -626,7 +626,6 @@ function createUserAction() {
     showPage('menu');
 }
 
-// Select User
 function loadUserList() {
     const u = getUsers();
     const list = document.getElementById('user-list');
@@ -658,7 +657,7 @@ function deleteUserAction(name) {
     loadUserList();
 }
 
-// Language selector rendering
+// Language selectors
 function renderLangSelectors() {
     if (!currentUser) return;
     const settings = getCurrentSettings();
@@ -691,59 +690,50 @@ function doLearn() {
     saveCurrentWord();
     showPage('learn');
     if (!currentUser) return;
-
     const userData = getUser(currentUser);
     if (!userData) return;
     const learned = new Set(userData.words.map(w => w.word));
     const available = Object.keys(DICT).filter(w => !learned.has(w));
     if (!available.length) { showEmpty('You\'ve learned all words!\n已全部学完!'); return; }
-
     currentWord = available[Math.floor(Math.random() * available.length)];
     renderLearnPage();
 }
 
 function renderLearnPage() {
-    const wordKey = currentWord;
-    const entry = DICT[wordKey];
+    const entry = DICT[currentWord];
     if (!entry) return;
-
     const settings = getCurrentSettings();
-    const learnLang = settings.learnLang;
-
-    document.getElementById('learn-word').textContent = wordKey.charAt(0).toUpperCase() + wordKey.slice(1);
-    document.getElementById('learn-def').textContent = entry.definition[learnLang] || '';
-    renderSentences(wordKey, 'learn-sentences');
+    document.getElementById('learn-word').textContent = currentWord.charAt(0).toUpperCase() + currentWord.slice(1);
+    document.getElementById('learn-def').textContent = entry.definition[settings.learnLang] || '';
+    renderSentences(currentWord, 'learn-sentences');
 }
 
 function escapeHtml(str) {
     return str.replace(/'/g, "\\'").replace(/\\/g, '\\\\');
 }
 
-// Render word + sentences panel (shared by learn, test, review)
+// Shared sentence renderer
 function renderSentences(wordKey, containerId) {
     const entry = DICT[wordKey];
     if (!entry) { document.getElementById(containerId).innerHTML = ''; return; }
     const settings = getCurrentSettings();
     const learnLang = settings.learnLang;
     const container = document.getElementById(containerId);
-
-    // Use shuffled sentences if available
     const sentences = _sentenceShuffle[containerId] || entry.sentence;
 
     let html = '';
 
-    // Word sound button
+    // Word sound
     const wordTts = LANGS[learnLang] ? LANGS[learnLang].tts : 'en-US';
     html += `<div class="sentence-row">
         <span class="sentence-lang">${LANGS[learnLang].native}</span>
         <span class="sentence-text">${escapeHtml(wordKey)}</span>
-        <button class="sentence-btn" onclick="speakWord('${escapeHtml(wordKey)}','${wordTts}')"></button>
+        <button class="sentence-btn" onclick="speakWord('${escapeHtml(wordKey)}','${wordTts}')">🔊</button>
     </div>`;
 
-    // Sentences: up to 3, show different languages
     const seenLangs = new Set();
 
-    // Show learnLang sentence first if available
+    // Learn language sentence
     const learnSent = sentences.find(s => s.lang === learnLang);
     if (learnSent) {
         const tts = LANGS[learnLang].tts;
@@ -755,7 +745,7 @@ function renderSentences(wordKey, containerId) {
         seenLangs.add(learnLang);
     }
 
-    // Show sentences for trans1 and trans2
+    // Translation sentences
     for (const tLang of [settings.transLang1, settings.transLang2]) {
         if (seenLangs.size >= 3) break;
         const sent = sentences.find(s => s.lang === tLang);
@@ -770,7 +760,7 @@ function renderSentences(wordKey, containerId) {
         }
     }
 
-    // Fill remaining slots with any other languages
+    // Fill with other langs
     for (const sent of sentences) {
         if (seenLangs.size >= 3) break;
         if (!seenLangs.has(sent.lang)) {
@@ -784,7 +774,6 @@ function renderSentences(wordKey, containerId) {
         }
     }
 
-    // Regenerate button
     html += `<div style="text-align:center;margin-top:8px;">
         <button class="action-btn secondary" style="padding:8px 16px;font-size:13px;min-width:auto;" onclick="regenerateSentences('${wordKey}','${containerId}')">Regenerate Sentences</button>
     </div>`;
@@ -792,8 +781,6 @@ function renderSentences(wordKey, containerId) {
     container.innerHTML = html;
 }
 
-// Regenerate: shuffle sentences randomly
-let _sentenceShuffle = {};
 function regenerateSentences(wordKey, containerId) {
     const entry = DICT[wordKey];
     if (!entry || !entry.sentence) return;
@@ -802,9 +789,7 @@ function regenerateSentences(wordKey, containerId) {
 }
 
 function saveCurrentWord() {
-    if (currentWord && currentUser) {
-        addWord(currentUser, currentWord);
-    }
+    if (currentWord && currentUser) addWord(currentUser, currentWord);
 }
 
 function saveAndBack() {
@@ -818,30 +803,30 @@ function doTest() {
     showPage('test');
     document.getElementById('test-answer').classList.add('hidden');
     document.getElementById('test-answer').innerHTML = '';
+    document.getElementById('test-sentences').classList.add('hidden');
+    document.getElementById('test-sentences').innerHTML = '';
 
     const userData = getUser(currentUser);
     if (!userData) return;
-    if (!userData.words.length) {
-        showEmpty('No words learned yet.\n还没有学过的单词!');
-        return;
-    }
+    if (!userData.words.length) { showEmpty('No words learned yet.\n还没有学过的单词!'); return; }
     const w = userData.words[Math.floor(Math.random() * userData.words.length)];
     testData = w;
     document.getElementById('test-word').textContent = w.word.charAt(0).toUpperCase() + w.word.slice(1);
-    renderSentences(w.word, 'test-sentences');
 }
-
-let testData = {};
 
 function showTestAnswer() {
     const a = document.getElementById('test-answer');
     const settings = getCurrentSettings();
-    const t1 = settings.transLang1;
-    const t2 = settings.transLang2;
-    const tr1 = getTranslation(testData.word, t1);
-    const tr2 = getTranslation(testData.word, t2);
-    a.innerHTML = `${LANGS[t1].native}: ${tr1}<br>${LANGS[t2].native}: ${tr2}`;
+    const tr1 = getTranslation(testData.word, settings.transLang1);
+    const tr2 = getTranslation(testData.word, settings.transLang2);
+    a.innerHTML = `${LANGS[settings.transLang1].native}: ${tr1}<br>${LANGS[settings.transLang2].native}: ${tr2}`;
     a.classList.remove('hidden');
+
+    // Show sentences
+    const panel = document.getElementById('test-sentences');
+    panel.classList.remove('hidden');
+    _sentenceShuffle['test-sentences'] = null; // reset shuffle on new word
+    renderSentences(testData.word, 'test-sentences');
 }
 
 // Review
@@ -850,18 +835,11 @@ function doReview() {
     if (!userData) return;
     const today = new Date().toISOString().slice(0, 10);
     reviewWords = userData.words.filter(w => (w.date || '').startsWith(today));
-    if (!reviewWords.length) {
-        showEmpty('No words learned today.\n今天没有学过的单词。');
-        return;
-    }
+    if (!reviewWords.length) { showEmpty('No words learned today.\n今天没有学过的单词。'); return; }
     reviewIndex = 0;
     showPage('review');
     showReviewWord();
 }
-
-let reviewWords = [];
-let reviewIndex = 0;
-let reviewData = {};
 
 function showReviewWord() {
     const w = reviewWords[reviewIndex];
@@ -869,29 +847,31 @@ function showReviewWord() {
     document.getElementById('review-word').textContent = w.word.charAt(0).toUpperCase() + w.word.slice(1);
     document.getElementById('review-answer').classList.add('hidden');
     document.getElementById('review-answer').innerHTML = '';
+    document.getElementById('review-sentences').classList.add('hidden');
+    document.getElementById('review-sentences').innerHTML = '';
     document.getElementById('review-time').textContent = `Learned at: ${w.date}`;
     reviewData = w;
-    renderSentences(w.word, 'review-sentences');
 }
 
 function showReviewAnswer() {
     const a = document.getElementById('review-answer');
     const settings = getCurrentSettings();
-    const t1 = settings.transLang1;
-    const t2 = settings.transLang2;
-    const tr1 = getTranslation(reviewData.word, t1);
-    const tr2 = getTranslation(reviewData.word, t2);
-    a.innerHTML = `${LANGS[t1].native}: ${tr1}<br>${LANGS[t2].native}: ${tr2}`;
+    const tr1 = getTranslation(reviewData.word, settings.transLang1);
+    const tr2 = getTranslation(reviewData.word, settings.transLang2);
+    a.innerHTML = `${LANGS[settings.transLang1].native}: ${tr1}<br>${LANGS[settings.transLang2].native}: ${tr2}`;
     a.classList.remove('hidden');
+
+    // Show sentences
+    const panel = document.getElementById('review-sentences');
+    panel.classList.remove('hidden');
+    _sentenceShuffle['review-sentences'] = null;
+    renderSentences(reviewData.word, 'review-sentences');
 }
 
 function reviewNext() {
     reviewIndex++;
-    if (reviewIndex < reviewWords.length) {
-        showReviewWord();
-    } else {
-        showEmpty('All reviewed!\n已全部复习!');
-    }
+    if (reviewIndex < reviewWords.length) { showReviewWord(); }
+    else { showEmpty('All reviewed!\n已全部复习!'); }
 }
 
 // Utility
@@ -919,36 +899,28 @@ window.importUser = importUser;
 
 // Init
 autoRestore();
-document.getElementById('version-badge').textContent = '(' + APP_VERSION + ')';
 updateMenuButtons();
 
 // PWA
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-        navigator.serviceWorker.register('./service-worker.js').then(function(reg) {
-            reg.update();
-        });
+        navigator.serviceWorker.register('./service-worker.js').then(function(reg) { reg.update(); });
     });
-
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.ready.then(function(reg) {
-            reg.addEventListener('updatefound', function() {
-                const newWorker = reg.installing;
-                newWorker.addEventListener('statechange', function() {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        document.getElementById('update-banner').style.display = 'block';
-                    }
-                });
+    navigator.serviceWorker.ready.then(function(reg) {
+        reg.addEventListener('updatefound', function() {
+            const newWorker = reg.installing;
+            newWorker.addEventListener('statechange', function() {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    document.getElementById('update-banner').style.display = 'block';
+                }
             });
         });
-    }
+    });
 }
 
 function installUpdate() {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.ready.then(function(reg) {
-            reg.waiting.postMessage('skipWaiting');
-        });
+        navigator.serviceWorker.ready.then(function(reg) { reg.waiting.postMessage('skipWaiting'); });
     }
     window.location.reload();
 }
