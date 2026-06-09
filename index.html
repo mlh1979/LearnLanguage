@@ -280,7 +280,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.2.2';
+const APP_VERSION = 'v1.0.2.3';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -1205,22 +1205,24 @@ async function fetchAndShowOnlineWord(learned) {
                 const entry = data[0];
                 const word = entry.word;
 
-                // Search all meanings for definition and example
+                // Collect ALL examples from the API
+                var allExamples = [];
                 var def = '';
-                var example = '';
                 if (entry.meanings) {
                     for (var m = 0; m < entry.meanings.length; m++) {
-                        var defs = entry.meanings[m].definitions || [];
-                        for (var d = 0; d < defs.length; d++) {
-                            if (!def && defs[d].definition) def = defs[d].definition;
-                            if (!example && defs[d].example) example = defs[d].example;
-                            if (def && example) break;
+                        var meaningDefs = entry.meanings[m].definitions || [];
+                        for (var d = 0; d < meaningDefs.length; d++) {
+                            if (!def && meaningDefs[d].definition) def = meaningDefs[d].definition;
+                            if (meaningDefs[d].example) {
+                                allExamples.push(meaningDefs[d].example);
+                            }
                         }
-                        if (def && example) break;
                     }
                 }
-                // Fallback example that actually uses the word
-                if (!example) example = 'The word "' + word + '" means ' + (def || 'something important');
+                // Fallback if no examples found
+                if (allExamples.length === 0) {
+                    allExamples.push('The word "' + word + '" means ' + (def || 'something important'));
+                }
 
                 // Get user's settings for translation
                 const settings = getCurrentSettings();
@@ -1238,22 +1240,32 @@ async function fetchAndShowOnlineWord(learned) {
                     } catch(e) { defTranslations[tl] = ''; }
                 }
 
-                // Translate example sentence
-                const sentTranslations = {};
-                const enText = example;
-                for (const tl of transLangs) {
-                    try {
-                        const tResp = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=' + tl + '&dt=t&q=' + encodeURIComponent(enText));
-                        const tData = await tResp.json();
-                        if (tData && tData[0]) {
-                            sentTranslations[tl] = tData[0].map(function(p) { return p[0]; }).join('');
-                        }
-                    } catch(e) { sentTranslations[tl] = ''; }
+                // Translate ALL example sentences
+                const allSentences = []; // array of { en, zh/ms/..., ms/... }
+                for (const ex of allExamples) {
+                    var sentObj = { en: ex };
+                    for (const tl of transLangs) {
+                        try {
+                            const tResp = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=' + tl + '&dt=t&q=' + encodeURIComponent(ex));
+                            const tData = await tResp.json();
+                            if (tData && tData[0]) {
+                                sentObj[tl] = tData[0].map(function(p) { return p[0]; }).join('');
+                            }
+                        } catch(e) { sentObj[tl] = ''; }
+                    }
+                    allSentences.push(sentObj);
                 }
 
-                const sentences = [{ lang: 'en', text: enText }];
-                for (const tl of transLangs) {
-                    if (sentTranslations[tl]) sentences.push({ lang: tl, text: sentTranslations[tl] });
+                // Pick 3 random sentences for display
+                const shuffledExamples = allSentences.sort(function() { return Math.random() - 0.5; });
+                const picked = shuffledExamples.slice(0, Math.min(3, shuffledExamples.length));
+
+                const sentences = [];
+                for (const s of picked) {
+                    sentences.push({ lang: 'en', text: s.en });
+                    for (const tl of transLangs) {
+                        if (s[tl]) sentences.push({ lang: tl, text: s[tl] });
+                    }
                 }
 
                 const definition = { en: def };
@@ -1266,7 +1278,8 @@ async function fetchAndShowOnlineWord(learned) {
                     image: "https://loremflickr.com/400/200/" + encodeURIComponent(entry.word),
                     definition: definition,
                     sentence: sentences,
-                    translations: {}
+                    translations: {},
+                    _sentencePool: allSentences // store ALL sentences for regenerate
                 };
                 renderLearnPage();
                 return;
@@ -1447,7 +1460,26 @@ function renderSentences(wordKey, containerId) {
 }
 
 function regenerateSentences(wordKey, containerId) {
+    const entry = DICT[wordKey];
+    if (!entry) return;
     _sentenceShuffle[containerId] = true;
+
+    // For online words with a sentence pool, pick 3 random sentences from the pool
+    if (entry._sentencePool && entry._sentencePool.length > 1) {
+        const settings = getCurrentSettings();
+        const transLangs = [settings.transLang1, settings.transLang2];
+        const shuffled = entry._sentencePool.sort(function() { return Math.random() - 0.5; });
+        const picked = shuffled.slice(0, Math.min(3, shuffled.length));
+        const sentences = [];
+        for (const s of picked) {
+            sentences.push({ lang: 'en', text: s.en });
+            for (const tl of transLangs) {
+                if (s[tl]) sentences.push({ lang: tl, text: s[tl] });
+            }
+        }
+        entry.sentence = sentences;
+    }
+
     renderSentences(wordKey, containerId);
 }
 
