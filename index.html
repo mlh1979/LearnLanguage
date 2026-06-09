@@ -275,7 +275,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.0.9';
+const APP_VERSION = 'v1.0.1.0';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -1216,7 +1216,7 @@ async function fetchAndShowOnlineWord(learned) {
                 };
                 renderLearnPage();
                 return;
-        } catch (e) { /* try next */ }
+            } catch (e) { /* try next */ }
     }
     // Fallback to cache
     loadFromCache(learned);
