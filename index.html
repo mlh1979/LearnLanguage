@@ -273,7 +273,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.1.3';
+const APP_VERSION = 'v1.0.1.4';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -1203,7 +1203,7 @@ async function fetchAndShowOnlineWord(learned) {
 
                 currentWord = entry.word;
                 DICT[entry.word] = {
-                    image: "https://source.unsplash.com/400x200/?" + encodeURIComponent(entry.word),
+                    image: "https://loremflickr.com/400/200/" + encodeURIComponent(entry.word) + "/all?lock=" + Date.now(),
                     definition: { en: def, zh: "", ms: "", ta: "", ja: "", zhTW: "", ko: "", th: "", vi: "", id: "", es: "", fr: "", de: "", ar: "", ru: "", pt: "", it: "", nl: "" },
                     sentence: [
                         { lang: 'en', text: example || (entry.word + ' is a useful word to know.') },
@@ -1264,7 +1264,7 @@ async function refreshCachedWords() {
                     ? entry.meanings[0].definitions[0].example || '' : '';
                 results.push({
                     word: entry.word,
-                    image: "https://source.unsplash.com/400x200/?" + encodeURIComponent(entry.word),
+                    image: "https://loremflickr.com/400/200/" + encodeURIComponent(entry.word) + "/all?lock=" + Date.now(),
                     definition: { en: def, zh: "", ms: "", ta: "", ja: "", zhTW: "", ko: "", th: "", vi: "", id: "", es: "", fr: "", de: "", ar: "", ru: "", pt: "", it: "", nl: "" },
                     sentence: [
                         { lang: 'en', text: example || (entry.word + ' is a useful word to know.') },
