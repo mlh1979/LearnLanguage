@@ -126,6 +126,10 @@
                 <span class="btn-zh">退出</span>
                 <span class="btn-ms">Keluar</span>
             </button>
+            <button class="menu-btn" style="opacity:0.4;font-size:12px;padding:10px 16px;" onclick="showDebugLog()">
+                <span class="btn-en">Debug Log</span>
+                <span class="btn-zh">调试日志</span>
+            </button>
         </div>
     </div>
 
@@ -271,7 +275,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.0.6';
+const APP_VERSION = 'v1.0.0.8';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -850,13 +854,15 @@ function saveSettings(s) {
 
 // Debug log
 function logEvent(msg) {
-    var key = 'el_debug_log';
-    var entries = [];
-    try { entries = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}
-    var ts = new Date().toLocaleTimeString();
-    entries.push('[' + ts + '] ' + msg);
-    if (entries.length > 200) entries = entries.slice(-200);
-    localStorage.setItem(key, JSON.stringify(entries));
+    try {
+        var key = 'el_debug_log';
+        var entries = [];
+        try { entries = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}
+        var ts = new Date().toLocaleTimeString();
+        entries.push('[' + ts + '] ' + msg);
+        if (entries.length > 200) entries = entries.slice(-200);
+        localStorage.setItem(key, JSON.stringify(entries));
+    } catch (e) {}
     console.log('[App Debug] ' + msg);
 }
 
@@ -1570,40 +1576,55 @@ window.exportUser = exportUser;
 window.importUser = importUser;
 
 // Init
-logEvent('=== Page loaded ===');
-logEvent('User Agent: ' + navigator.userAgent);
-logEvent('onLine: ' + navigator.onLine);
-
-// Failsafe: if el_users is corrupted, clear it
-try {
-    var raw = localStorage.getItem('el_users');
-    if (raw && typeof raw === 'string') {
-        var parsed = JSON.parse(raw);
-        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-            logEvent('el_users corrupted, clearing');
-            localStorage.removeItem('el_users');
-            localStorage.removeItem('el_last_user');
+// Step 1: Validate localStorage — if anything is broken, wipe and start fresh
+(function() {
+    var keys = ['el_users', 'el_last_user', 'el_debug_log', 'el_cached_words'];
+    var allOK = true;
+    for (var i = 0; i < keys.length; i++) {
+        try {
+            var val = localStorage.getItem(keys[i]);
+            if (val !== null) { JSON.parse(val); }
+        } catch (e) {
+            allOK = false;
+            localStorage.removeItem(keys[i]);
         }
     }
-} catch (e) {
-    logEvent('el_users parse error, clearing: ' + e.message);
-    localStorage.removeItem('el_users');
-    localStorage.removeItem('el_last_user');
-}
+    if (!allOK) {
+        console.warn('[App] localStorage corrupted, cleared. Will create fresh Guest profile.');
+    }
+})();
 
 autoRestore();
 
-// Double-check: if still no user after autoRestore, force create Guest
-if (!currentUser) {
-    logEvent('Failsafe: no user after autoRestore, forcing Guest creation');
-    localStorage.removeItem('el_users');
-    localStorage.removeItem('el_last_user');
-    var guestName = 'Guest';
-    createUser(guestName);
-    currentUser = guestName;
-    localStorage.setItem('el_last_user', guestName);
-    logEvent('Failsafe Guest created, currentUser=' + currentUser);
-}
+// Step 2: Guarantee a user exists
+(function() {
+    var users;
+    try { users = getUsers(); } catch { users = {}; }
+    var keys = Object.keys(users);
+    if (keys.length === 0) {
+        try {
+            createUser('Guest');
+            currentUser = 'Guest';
+            localStorage.setItem('el_last_user', 'Guest');
+            console.log('[App] Created fresh Guest profile');
+        } catch (e) {
+            console.error('[App] Failed to create Guest:', e);
+            // Last resort: directly write to localStorage
+            try {
+                localStorage.setItem('el_users', JSON.stringify({ Guest: { name: 'Guest', settings: { learnLang: 'en', transLang1: 'zh', transLang2: 'ms' }, words: {} } }));
+                localStorage.setItem('el_last_user', 'Guest');
+                currentUser = 'Guest';
+                console.log('[App] Emergency Guest created via direct localStorage');
+            } catch (e2) {
+                console.error('[App] localStorage completely broken:', e2);
+            }
+        }
+    } else if (!currentUser) {
+        currentUser = keys[0];
+        localStorage.setItem('el_last_user', keys[0]);
+        console.log('[App] Picked first user:', currentUser);
+    }
+})();
 
 updateMenuButtons();
 if (navigator.onLine) { refreshCachedWords(); }
