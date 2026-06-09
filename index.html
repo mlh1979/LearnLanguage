@@ -271,7 +271,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.0.4';
+const APP_VERSION = 'v1.0.0.5';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -986,18 +986,38 @@ function autoRestore() {
 }
 
 function migrateWords() {
-    const users = getUsers();
-    let changed = false;
-    Object.keys(users).forEach(function(name) {
+    var users;
+    try {
+        users = getUsers();
+    } catch {
+        logEvent('migrateWords: getUsers failed, clearing all');
+        localStorage.removeItem('el_users');
+        localStorage.removeItem('el_last_user');
+        return;
+    }
+    var keys = Object.keys(users);
+    var changed = false;
+    for (var i = 0; i < keys.length; i++) {
+        var name = keys[i];
         var u = users[name];
+        // Validate user object structure
+        if (!u || typeof u !== 'object') {
+            logEvent('Invalid user entry, removing: ' + name);
+            delete users[name];
+            changed = true;
+            continue;
+        }
+        if (!u.settings || typeof u.settings !== 'object') {
+            u.settings = { learnLang: 'en', transLang1: 'zh', transLang2: 'ms' };
+            changed = true;
+        }
         if (Array.isArray(u.words)) {
-            var lang = u.settings ? u.settings.learnLang : 'en';
+            var lang = u.settings.learnLang || 'en';
             var migrated = {};
             migrated[lang] = u.words;
             u.words = migrated;
             changed = true;
-        } else if (u.words && typeof u.words === 'object') {
-            // Ensure all sub-arrays exist
+        } else if (u.words && typeof u.words === 'object' && !Array.isArray(u.words)) {
             for (var key in u.words) {
                 if (!Array.isArray(u.words[key])) {
                     u.words[key] = [];
@@ -1006,7 +1026,7 @@ function migrateWords() {
         } else if (!u.words) {
             u.words = {};
         }
-    });
+    }
     if (changed) saveUsers(users);
 }
 
