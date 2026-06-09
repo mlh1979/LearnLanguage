@@ -1077,6 +1077,62 @@ function doLearn() {
     if (!userData.words) userData.words = {};
     const learnedList = userData.words[settings.learnLang] || [];
     const learned = new Set(learnedList.map(w => w.word));
+
+    if (navigator.onLine) {
+        fetchOnlineWord(learned, settings, userData);
+    } else {
+        loadFromDict(learned);
+    }
+}
+
+async function fetchOnlineWord(learned, settings, userData) {
+    const words = [
+        "abandon","absorb","achieve","balance","brilliant","courage","desire","elegant","flourish","gentle",
+        "harmony","imagine","journey","knowledge","liberty","magnificent","observe","paradise","resilient","thrive",
+        "wisdom","adventure","brave","calm","dream","energy","focus","grace","hope","inspire",
+        "joy","kind","loyal","mind","noble","peace","quest","rise","spirit","trust",
+        "unity","value","warm","yield","zeal","ancient","bright","clear","deep","earth",
+        "faith","glory","honor","ideal","just","keen","lively","mere","noble","oath",
+        "pure","rare","safe","true","vast","wise","young","bold","calm","daring",
+        "eager","free","gift","humble","iron","joke","kind","luck","mild","neat"
+    ];
+    const available = words.filter(w => !learned.has(w));
+    if (!available.length) { showEmpty('You\'ve learned all words!\n已全部学完!'); return; }
+
+    // Pick 3 random candidates, pick first one that API returns
+    const shuffled = available.sort(function() { return Math.random() - 0.5; });
+    for (let i = 0; i < Math.min(3, shuffled.length); i++) {
+        try {
+            const resp = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + shuffled[i]);
+            if (resp.ok) {
+                const data = await resp.json();
+                const entry = data[0];
+                const def = entry.meanings && entry.meanings[0] && entry.meanings[0].definitions && entry.meanings[0].definitions[0]
+                    ? entry.meanings[0].definitions[0].definition : '';
+                const example = entry.meanings && entry.meanings[0] && entry.meanings[0].definitions && entry.meanings[0].definitions[0]
+                    ? entry.meanings[0].definitions[0].example || '' : '';
+
+                currentWord = entry.word;
+                DICT[entry.word] = {
+                    image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=200&fit=crop",
+                    definition: { en: def, zh: "", ms: "", ta: "", ja: "", zhTW: "", ko: "", th: "", vi: "", id: "", es: "", fr: "", de: "", ar: "", ru: "", pt: "", it: "", nl: "" },
+                    sentence: [
+                        { lang: 'en', text: example || (entry.word + ' is a useful word to know.') },
+                        { lang: 'zh', text: "学习这个单词很有用。" },
+                        { lang: 'ms', text: "Berguna untuk belajar perkataan ini." },
+                    ],
+                    translations: {}
+                };
+                renderLearnPage();
+                return;
+            }
+        } catch (e) { /* try next */ }
+    }
+    // If all API calls fail, fall back to DICT
+    loadFromDict(learned);
+}
+
+function loadFromDict(learned) {
     const available = Object.keys(DICT).filter(w => !learned.has(w));
     if (!available.length) { showEmpty('You\'ve learned all words!\n已全部学完!'); return; }
     currentWord = available[Math.floor(Math.random() * available.length)];
