@@ -279,7 +279,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.2.6';
+const APP_VERSION = 'v1.0.2.7';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -1293,7 +1293,22 @@ function loadFromCache(learned) {
     if (!available.length) { loadFromDict(learned); return; }
     const picked = available[Math.floor(Math.random() * available.length)];
     currentWord = picked.word;
-    DICT[picked.word] = picked;
+    // Merge with existing DICT entry to preserve full sentences/definitions
+    if (DICT[picked.word]) {
+        var existing = DICT[picked.word];
+        // Only use cached English definition (API has better defs), keep built-in translations
+        var mergedDef = { en: picked.definition.en || existing.definition.en };
+        for (var dk in existing.definition) { if (dk !== 'en' && existing.definition[dk]) mergedDef[dk] = existing.definition[dk]; }
+        // Use built-in full sentences; cached sentences are just for display hint
+        DICT[picked.word] = {
+            definition: mergedDef,
+            sentence: existing.sentence,
+            translations: existing.translations,
+            _sentencePool: existing._sentencePool
+        };
+    } else {
+        DICT[picked.word] = picked;
+    }
     renderLearnPage();
 }
 
@@ -1325,16 +1340,23 @@ async function refreshCachedWords() {
                 const entry = data[0];
                 const def = entry.meanings && entry.meanings[0] && entry.meanings[0].definitions && entry.meanings[0].definitions[0]
                     ? entry.meanings[0].definitions[0].definition : '';
-                const example = entry.meanings && entry.meanings[0] && entry.meanings[0].definitions && entry.meanings[0].definitions[0]
+                const ex = entry.meanings && entry.meanings[0] && entry.meanings[0].definitions && entry.meanings[0].definitions[0]
                     ? entry.meanings[0].definitions[0].example || '' : '';
+                // Build sentences from current settings
+                var currentSettings = getCurrentSettings();
+                var sentArr = [{ lang: 'en', text: ex || (entry.word + ' is a useful word to know.') }];
+                var tLangs = [currentSettings.transLang1, currentSettings.transLang2];
+                for (var tl = 0; tl < tLangs.length; tl++) {
+                    var tlCode = tLangs[tl];
+                    if (DICT[entry.word] && DICT[entry.word].sentence) {
+                        var found = DICT[entry.word].sentence.find(function(s) { return s.lang === tlCode; });
+                        if (found) sentArr.push({ lang: tlCode, text: found.text });
+                    }
+                }
                 results.push({
                     word: entry.word,
                     definition: { en: def, zh: "", ms: "", ta: "", ja: "", zhTW: "", ko: "", th: "", vi: "", id: "", es: "", fr: "", de: "", ar: "", ru: "", pt: "", it: "", nl: "" },
-                    sentence: [
-                        { lang: 'en', text: example || (entry.word + ' is a useful word to know.') },
-                        { lang: 'zh', text: "学习这个单词很有用。" },
-                        { lang: 'ms', text: "Berguna untuk belajar perkataan ini." },
-                    ],
+                    sentence: sentArr,
                     translations: {}
                 });
             }
@@ -1390,9 +1412,12 @@ function renderSentences(wordKey, containerId) {
 
     // Display sentences in language priority order: learnLang, transLang1, transLang2
     const order = [learnLang, settings.transLang1, settings.transLang2];
+    const allLangs = Object.keys(LANGS);
+    const fallbackOrder = allLangs.filter(function(l) { return order.indexOf(l) === -1; });
+    const fullOrder = order.concat(fallbackOrder);
     const picked = [];
     const seen = new Set();
-    for (const lang of order) {
+    for (const lang of fullOrder) {
         const sent = entry.sentence.find(function(s) { return s.lang === lang; });
         if (sent && !seen.has(sent.lang)) { picked.push(sent); seen.add(sent.lang); }
     }
@@ -1428,18 +1453,34 @@ function regenerateSentences(wordKey, containerId) {
     if (!entry) return;
     _sentenceShuffle[containerId] = true;
 
+    const settings = getCurrentSettings();
+    const transLangs = [settings.transLang1, settings.transLang2];
+    const learnLang = settings.learnLang;
+
     // For online words with a sentence pool, pick 1 random sentence with all 3 language translations
     if (entry._sentencePool && entry._sentencePool.length > 1) {
-        const settings = getCurrentSettings();
-        const transLangs = [settings.transLang1, settings.transLang2];
         const shuffled = entry._sentencePool.sort(function() { return Math.random() - 0.5; });
-        const picked = shuffled[0]; // pick 1 random sentence
+        const picked = shuffled[0];
         const sentences = [];
         sentences.push({ lang: 'en', text: picked.en });
         for (const tl of transLangs) {
             if (picked[tl]) sentences.push({ lang: tl, text: picked[tl] });
         }
         entry.sentence = sentences;
+    }
+    // For built-in words with full sentence arrays, rebuild from the full pool
+    else if (entry.sentence && entry.sentence.length > 3) {
+        const allByLang = {};
+        for (var i = 0; i < entry.sentence.length; i++) {
+            allByLang[entry.sentence[i].lang] = entry.sentence[i].text;
+        }
+        const newSentences = [];
+        if (allByLang['en']) newSentences.push({ lang: 'en', text: allByLang['en'] });
+        if (allByLang[learnLang]) newSentences.push({ lang: learnLang, text: allByLang[learnLang] });
+        for (const tl of transLangs) {
+            if (allByLang[tl]) newSentences.push({ lang: tl, text: allByLang[tl] });
+        }
+        entry.sentence = newSentences;
     }
 
     renderSentences(wordKey, containerId);
