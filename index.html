@@ -75,11 +75,15 @@
         .section-label { font-size: 13px; color: #888; font-weight: 600; margin: 16px 0 8px; text-align: center; }
         #update-banner { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #4a6cf7; color: white; padding: 12px 20px; text-align: center; z-index: 9999; }
         #update-banner button { background: white; color: #4a6cf7; border: none; padding: 6px 16px; border-radius: 6px; font-weight: 600; margin-left: 10px; cursor: pointer; }
+        #connection-status { position: fixed; top: 8px; right: 8px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; z-index: 9999; transition: background 0.3s; }
+        #connection-status.online { background: #22c55e; }
+        #connection-status.offline { background: #ef4444; }
         @media (max-width: 480px) { #app { max-width: 100%; } .word-display { font-size: 28px; } .action-btn { min-width: 100px; padding: 10px 16px; font-size: 14px; } }
     </style>
 </head>
 <body>
 <div id="app">
+    <div id="connection-status offline"></div>
     <header id="app-header">
         <h1 id="app-title-text">Learn Language <span id="version-badge"></span></h1>
         <div id="user-status">No user selected</div>
@@ -273,7 +277,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.1.7';
+const APP_VERSION = 'v1.0.1.8';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -1635,6 +1639,27 @@ autoRestore();
 })();
 
 updateMenuButtons();
+
+// Connection status
+var connectionEl = document.getElementById('connection-status');
+function updateConnectionStatus() {
+    var online = navigator.onLine;
+    connectionEl.className = online ? 'online' : 'offline';
+    if (online) {
+        // Verify actual connectivity by fetching a small resource
+        fetch('https://api.dictionaryapi.dev/api/v2/entries/en/test', { method: 'HEAD', mode: 'no-cors' })
+            .then(function() {
+                connectionEl.className = 'online';
+            })
+            .catch(function() {
+                connectionEl.className = 'offline';
+            });
+    }
+}
+updateConnectionStatus();
+window.addEventListener('online', updateConnectionStatus);
+window.addEventListener('offline', updateConnectionStatus);
+
 if (navigator.onLine) { refreshCachedWords(); }
 
 // Pre-load TTS voices
