@@ -823,7 +823,7 @@ function saveUsers(data) { localStorage.setItem('el_users', JSON.stringify(data)
 function getUser(name) { return getUsers()[name] || null; }
 function createUser(name) {
     const u = getUsers();
-    u[name] = { name, settings: { ...DEFAULT_SETTINGS }, words: [] };
+    u[name] = { name, settings: { ...DEFAULT_SETTINGS }, words: {} };
     saveUsers(u);
 }
 function deleteUser(name) {
@@ -831,11 +831,13 @@ function deleteUser(name) {
     delete u[name];
     saveUsers(u);
 }
-function addWord(username, wordKey) {
+function addWord(username, wordKey, lang) {
     const u = getUsers();
     if (!u[username]) return;
-    if (u[username].words.find(w => w.word === wordKey)) return;
-    u[username].words.push({ word: wordKey, date: new Date().toISOString().slice(0, 19).replace('T', ' ') });
+    if (!u[username].words) u[username].words = {};
+    if (!u[username].words[lang]) u[username].words[lang] = [];
+    if (u[username].words[lang].find(w => w.word === wordKey)) return;
+    u[username].words[lang].push({ word: wordKey, date: new Date().toISOString().slice(0, 19).replace('T', ' ') });
     saveUsers(u);
 }
 
@@ -867,7 +869,17 @@ function importUser(event) {
     reader.onload = function(e) {
         try {
             const data = JSON.parse(e.target.result);
-            if (!data.name || !Array.isArray(data.words)) { alert('Invalid file format!'); return; }
+            if (!data.name) { alert('Invalid file format!'); return; }
+            // Migrate old format (words as array) to new format (words as object by lang)
+            if (Array.isArray(data.words)) {
+                const migrated = {};
+                data.words.forEach(function(w) {
+                    if (!migrated[data.settings ? data.settings.learnLang : 'en']) migrated[data.settings ? data.settings.learnLang : 'en'] = [];
+                    migrated[data.settings ? data.settings.learnLang : 'en'].push(w);
+                });
+                data.words = migrated;
+            }
+            if (!data.words) data.words = {};
             const u = getUsers();
             if (!data.settings) data.settings = { ...DEFAULT_SETTINGS };
             u[data.name] = data;
@@ -950,7 +962,12 @@ function loadUserList() {
         return;
     }
     list.innerHTML = names.map(n => {
-        const count = u[n].words.length;
+        let count = 0;
+        if (u[n].words) {
+            const wl = u[n].words;
+            if (Array.isArray(wl)) { count = wl.length; }
+            else { count = Object.values(wl).reduce(function(s, arr) { return s + arr.length; }, 0); }
+        }
         return `<button class="user-btn" onclick="selectUser('${n}')">${n} <span>(${count} words)</span>
             <button class="delete-btn" onclick="event.stopPropagation();deleteUserAction('${n}')">✕</button>
         </button>`;
@@ -1005,9 +1022,12 @@ function doLearn() {
     saveCurrentWord();
     showPage('learn');
     if (!currentUser) return;
+    const settings = getCurrentSettings();
     const userData = getUser(currentUser);
     if (!userData) return;
-    const learned = new Set(userData.words.map(w => w.word));
+    if (!userData.words) userData.words = {};
+    const learnedList = userData.words[settings.learnLang] || [];
+    const learned = new Set(learnedList.map(w => w.word));
     const available = Object.keys(DICT).filter(w => !learned.has(w));
     if (!available.length) { showEmpty('You\'ve learned all words!\n已全部学完!'); return; }
     currentWord = available[Math.floor(Math.random() * available.length)];
@@ -1106,7 +1126,10 @@ function regenerateSentences(wordKey, containerId) {
 }
 
 function saveCurrentWord() {
-    if (currentWord && currentUser) addWord(currentUser, currentWord);
+    if (currentWord && currentUser) {
+        const settings = getCurrentSettings();
+        addWord(currentUser, currentWord, settings.learnLang);
+    }
 }
 
 function saveAndBack() {
@@ -1125,8 +1148,10 @@ function doTest() {
 
     const userData = getUser(currentUser);
     if (!userData) return;
-    if (!userData.words.length) { showEmpty('No words learned yet.\n还没有学过的单词!'); return; }
-    const w = userData.words[Math.floor(Math.random() * userData.words.length)];
+    const settings = getCurrentSettings();
+    const learnedList = (userData.words[settings.learnLang] || []);
+    if (!learnedList.length) { showEmpty('No words learned yet.\n还没有学过的单词!'); return; }
+    const w = learnedList[Math.floor(Math.random() * learnedList.length)];
     testData = w;
     document.getElementById('test-word').textContent = w.word.charAt(0).toUpperCase() + w.word.slice(1);
 }
@@ -1157,8 +1182,10 @@ function showTestAnswer() {
 function doReview() {
     const userData = getUser(currentUser);
     if (!userData) return;
+    const settings = getCurrentSettings();
     const today = new Date().toISOString().slice(0, 10);
-    reviewWords = userData.words.filter(w => (w.date || '').startsWith(today));
+    const learnedList = userData.words[settings.learnLang] || [];
+    reviewWords = learnedList.filter(w => (w.date || '').startsWith(today));
     if (!reviewWords.length) { showEmpty('No words learned today.\n今天没有学过的单词。'); return; }
     reviewIndex = 0;
     showPage('review');
