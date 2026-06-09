@@ -275,7 +275,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.0.8';
+const APP_VERSION = 'v1.0.0.9';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -857,7 +857,7 @@ function logEvent(msg) {
     try {
         var key = 'el_debug_log';
         var entries = [];
-        try { entries = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}
+        try { entries = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
         var ts = new Date().toLocaleTimeString();
         entries.push('[' + ts + '] ' + msg);
         if (entries.length > 200) entries = entries.slice(-200);
@@ -869,7 +869,7 @@ function logEvent(msg) {
 function showDebugLog() {
     showPage('debug-log');
     var entries = [];
-    try { entries = JSON.parse(localStorage.getItem('el_debug_log') || '[]'); } catch {}
+    try { entries = JSON.parse(localStorage.getItem('el_debug_log') || '[]'); } catch(e) {}
     document.getElementById('debug-content').textContent = entries.join('\n');
 }
 
@@ -880,7 +880,7 @@ function clearDebugLog() {
 
 // Data layer
 function getUsers() {
-    try { return JSON.parse(localStorage.getItem('el_users') || '{}'); } catch { return {}; }
+    try { return JSON.parse(localStorage.getItem('el_users') || '{}'); } catch(e) { return {}; }
 }
 function saveUsers(data) { localStorage.setItem('el_users', JSON.stringify(data)); }
 function getUser(name) { return getUsers()[name] || null; }
@@ -951,7 +951,7 @@ function importUser(event) {
             localStorage.setItem('el_last_user', data.name);
             updateMenuButtons();
             renderLangSelectors();
-        } catch { alert('Failed to read file!'); }
+        } catch(e) { alert('Failed to read file!'); }
     };
     reader.readAsText(file);
     event.target.value = '';
@@ -995,7 +995,7 @@ function migrateWords() {
     var users;
     try {
         users = getUsers();
-    } catch {
+    } catch(e) {
         logEvent('migrateWords: getUsers failed, clearing all');
         localStorage.removeItem('el_users');
         localStorage.removeItem('el_last_user');
@@ -1235,7 +1235,7 @@ function loadFromCache(learned) {
 
 // Cached words storage
 function getCachedWords() {
-    try { return JSON.parse(localStorage.getItem('el_cached_words') || '[]'); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem('el_cached_words') || '[]'); } catch(e) { return []; }
 }
 function saveCachedWords(words) { localStorage.setItem('el_cached_words', JSON.stringify(words)); }
 
@@ -1599,7 +1599,7 @@ autoRestore();
 // Step 2: Guarantee a user exists
 (function() {
     var users;
-    try { users = getUsers(); } catch { users = {}; }
+    try { users = getUsers(); } catch(e) { users = {}; }
     var keys = Object.keys(users);
     if (keys.length === 0) {
         try {
