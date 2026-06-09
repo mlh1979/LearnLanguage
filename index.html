@@ -75,7 +75,7 @@
         .section-label { font-size: 13px; color: #888; font-weight: 600; margin: 16px 0 8px; text-align: center; }
         #update-banner { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #4a6cf7; color: white; padding: 12px 20px; text-align: center; z-index: 9999; }
         #update-banner button { background: white; color: #4a6cf7; border: none; padding: 6px 16px; border-radius: 6px; font-weight: 600; margin-left: 10px; cursor: pointer; }
-        #connection-status { position: fixed; top: 8px; right: 8px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; z-index: 9999; transition: background 0.3s; }
+        #connection-status { position: fixed; top: 12px; right: 16px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.8); z-index: 10000; transition: background 0.3s; }
         #connection-status.online { background: #22c55e; }
         #connection-status.offline { background: #ef4444; }
         @media (max-width: 480px) { #app { max-width: 100%; } .word-display { font-size: 28px; } .action-btn { min-width: 100px; padding: 10px 16px; font-size: 14px; } }
@@ -83,7 +83,7 @@
 </head>
 <body>
 <div id="app">
-    <div id="connection-status offline"></div>
+    <div id="connection-status" class="offline"></div>
     <header id="app-header">
         <h1 id="app-title-text">Learn Language <span id="version-badge"></span></h1>
         <div id="user-status">No user selected</div>
@@ -216,7 +216,10 @@
         <div id="learn-word" class="word-display"></div>
         <div id="learn-def" class="definition"></div>
         <div id="learn-sentences" class="sentence-panel"></div>
-        <button class="action-btn secondary back-btn" onclick="saveAndBack()">Back to Menu</button>
+        <div class="btn-row">
+            <button class="action-btn" onclick="doLearn()">Next Word</button>
+            <button class="action-btn secondary" onclick="saveAndBack()">Back to Menu</button>
+        </div>
     </div>
 
     <!-- Test -->
@@ -277,7 +280,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.1.8';
+const APP_VERSION = 'v1.0.1.9';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -1205,15 +1208,50 @@ async function fetchAndShowOnlineWord(learned) {
                 const example = entry.meanings && entry.meanings[0] && entry.meanings[0].definitions && entry.meanings[0].definitions[0]
                     ? entry.meanings[0].definitions[0].example || '' : '';
 
+                // Get user's settings for translation
+                const settings = getCurrentSettings();
+                const transLangs = [settings.transLang1, settings.transLang2];
+
+                // Translate definition
+                const defTranslations = {};
+                for (const tl of transLangs) {
+                    try {
+                        const tResp = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=' + tl + '&dt=t&q=' + encodeURIComponent(def));
+                        const tData = await tResp.json();
+                        if (tData && tData[0]) {
+                            defTranslations[tl] = tData[0].map(function(p) { return p[0]; }).join('');
+                        }
+                    } catch(e) { defTranslations[tl] = ''; }
+                }
+
+                // Translate example sentence
+                const sentTranslations = {};
+                const enText = example || (entry.word + ' is a useful word to know.');
+                for (const tl of transLangs) {
+                    try {
+                        const tResp = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=' + tl + '&dt=t&q=' + encodeURIComponent(enText));
+                        const tData = await tResp.json();
+                        if (tData && tData[0]) {
+                            sentTranslations[tl] = tData[0].map(function(p) { return p[0]; }).join('');
+                        }
+                    } catch(e) { sentTranslations[tl] = ''; }
+                }
+
+                const sentences = [{ lang: 'en', text: enText }];
+                for (const tl of transLangs) {
+                    if (sentTranslations[tl]) sentences.push({ lang: tl, text: sentTranslations[tl] });
+                }
+
+                const definition = { en: def };
+                for (const tl of transLangs) {
+                    if (defTranslations[tl]) definition[tl] = defTranslations[tl];
+                }
+
                 currentWord = entry.word;
                 DICT[entry.word] = {
                     image: "https://loremflickr.com/400/200/" + encodeURIComponent(entry.word) + "/all?lock=" + Date.now(),
-                    definition: { en: def, zh: "", ms: "", ta: "", ja: "", zhTW: "", ko: "", th: "", vi: "", id: "", es: "", fr: "", de: "", ar: "", ru: "", pt: "", it: "", nl: "" },
-                    sentence: [
-                        { lang: 'en', text: example || (entry.word + ' is a useful word to know.') },
-                        { lang: 'zh', text: "学习这个单词很有用。" },
-                        { lang: 'ms', text: "Berguna untuk belajar perkataan ini." },
-                    ],
+                    definition: definition,
+                    sentence: sentences,
                     translations: {}
                 };
                 renderLearnPage();
