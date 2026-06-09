@@ -936,7 +936,7 @@ function updateMenuButtons() {
     document.getElementById('lang-settings').classList.toggle('hidden', !currentUser);
     const settings = getCurrentSettings();
     const langName = LANGS[settings.learnLang] ? LANGS[settings.learnLang].name : 'Language';
-    document.getElementById('app-title-text').innerHTML = `Learn ${langName} <span id="version-badge">${'(' + APP_VERSION + ')'}</span>`;
+    document.getElementById('app-title-text').innerHTML = `Learn Language <span id="version-badge">${'(' + APP_VERSION + ')'}</span>`;
     document.getElementById('version-badge').textContent = '(' + APP_VERSION + ')';
 }
 
