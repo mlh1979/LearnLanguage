@@ -273,7 +273,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.1.6';
+const APP_VERSION = 'v1.0.1.7';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -1566,6 +1566,12 @@ function speakWord(text, lang) {
     const u = new SpeechSynthesisUtterance(text);
     u.lang = lang || 'en-US';
     u.rate = 0.85;
+    // Try to find a matching voice
+    const voices = speechSynthesis.getVoices();
+    const langCode = lang ? lang.split('-')[0] : 'en';
+    for (const v of voices) {
+        if (v.lang.startsWith(langCode)) { u.voice = v; break; }
+    }
     speechSynthesis.speak(u);
 }
 
@@ -1630,6 +1636,12 @@ autoRestore();
 
 updateMenuButtons();
 if (navigator.onLine) { refreshCachedWords(); }
+
+// Pre-load TTS voices
+speechSynthesis.getVoices();
+if (speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = function() { speechSynthesis.getVoices(); };
+}
 
 // PWA
 if ('serviceWorker' in navigator) {
