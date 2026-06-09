@@ -1,4 +1,4 @@
-const CACHE_NAME = 'el-cache-v7';
+const CACHE_NAME = 'el-cache-v8';
 const FILES = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', function(e) {
@@ -25,6 +25,21 @@ self.addEventListener('activate', function(e) {
 });
 
 self.addEventListener('fetch', function(e) {
+    var url = new URL(e.request.url);
+    // Always fetch index.html from network (it contains the latest JS)
+    if (e.request.mode === 'navigate' || (url.pathname.endsWith('.html') || url.pathname.endsWith('/'))) {
+        e.respondWith(
+            fetch(e.request).then(function(response) {
+                return caches.open(CACHE_NAME).then(function(cache) {
+                    cache.put(e.request, response.clone());
+                    return response;
+                });
+            }).catch(function() {
+                return caches.match(e.request);
+            })
+        );
+        return;
+    }
     e.respondWith(
         caches.match(e.request).then(function(r) {
             return r || fetch(e.request).then(function(response) {

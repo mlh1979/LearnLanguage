@@ -1553,7 +1553,38 @@ window.importUser = importUser;
 logEvent('=== Page loaded ===');
 logEvent('User Agent: ' + navigator.userAgent);
 logEvent('onLine: ' + navigator.onLine);
+
+// Failsafe: if el_users is corrupted, clear it
+try {
+    var raw = localStorage.getItem('el_users');
+    if (raw && typeof raw === 'string') {
+        var parsed = JSON.parse(raw);
+        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+            logEvent('el_users corrupted, clearing');
+            localStorage.removeItem('el_users');
+            localStorage.removeItem('el_last_user');
+        }
+    }
+} catch (e) {
+    logEvent('el_users parse error, clearing: ' + e.message);
+    localStorage.removeItem('el_users');
+    localStorage.removeItem('el_last_user');
+}
+
 autoRestore();
+
+// Double-check: if still no user after autoRestore, force create Guest
+if (!currentUser) {
+    logEvent('Failsafe: no user after autoRestore, forcing Guest creation');
+    localStorage.removeItem('el_users');
+    localStorage.removeItem('el_last_user');
+    var guestName = 'Guest';
+    createUser(guestName);
+    currentUser = guestName;
+    localStorage.setItem('el_last_user', guestName);
+    logEvent('Failsafe Guest created, currentUser=' + currentUser);
+}
+
 updateMenuButtons();
 if (navigator.onLine) { refreshCachedWords(); }
 
