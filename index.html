@@ -1144,11 +1144,8 @@ function renderSentences(wordKey, containerId) {
 function regenerateSentences(wordKey, containerId) {
     const entry = DICT[wordKey];
     if (!entry || !entry.sentence) return;
-    const settings = getCurrentSettings();
-    // Filter out the learn language and trans languages to get pool of random sentences
-    const excluded = new Set([settings.learnLang, settings.transLang1, settings.transLang2]);
-    const pool = entry.sentence.filter(s => excluded.has(s.lang));
-    _sentenceShuffle[containerId] = pool.length > 0 ? [...pool].sort(function() { return Math.random() - 0.5; }) : [...entry.sentence].sort(function() { return Math.random() - 0.5; });
+    // Shuffle all sentences and pick 3 random ones
+    _sentenceShuffle[containerId] = [...entry.sentence].sort(function() { return Math.random() - 0.5; });
     renderSentences(wordKey, containerId);
 }
 
