@@ -47,6 +47,7 @@
         .no-users { text-align: center; color: #888; padding: 20px; }
         .status-badge { text-align: center; font-size: 12px; color: #888; margin-bottom: 10px; }
         .word-display { font-size: 36px; font-weight: 700; text-align: center; padding: 20px 0 10px; color: #1a1a2e; }
+        .word-image { width: 100%; height: 160px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; }
         .definition { font-size: 14px; text-align: center; color: #666; padding: 10px 16px; background: #f8f9fa; border-radius: 8px; margin-bottom: 16px; line-height: 1.5; }
         .definition-line { padding: 2px 0; }
         .def-lang-label { font-size: 11px; color: #6366f1; font-weight: 700; margin-right: 6px; }
@@ -286,6 +287,7 @@ const LANGS = {
 
 const DICT = {
     "abandon": {
+        image: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=200&fit=crop",
         definition: { en: "to leave something or someone behind", zh: "放弃", ms: "meninggalkan", ta: "கைவிடு", ja: "放棄する", zhTW: "放棄", ko: "버리다", th: "ละทิ้ง", vi: "bỏ rơi", id: "meninggalkan", es: "abandonar", fr: "abandonner", de: "verlassen", ar: "التخلي عن", ru: "покидать", pt: "abandonar", it: "abbandonare", nl: "verlaten" },
         sentence: [
             { lang: 'en', text: "They had to abandon their plan due to bad weather." },
@@ -310,6 +312,7 @@ const DICT = {
         translations: { zh: "放弃", ms: "meninggalkan", ta: "கைவிடு", ja: "放棄する", zhTW: "放棄", ko: "버리다", th: "ละทิ้ง", vi: "bỏ rơi", id: "meninggalkan", es: "abandonar", fr: "abandonner", de: "verlassen", ar: "التخلي عن", ru: "покидать", pt: "abandonar", it: "abbandonare", nl: "verlaten" },
     },
     "absorb": {
+        image: "https://images.unsplash.com/photo-1558618666-fcd25c83cd09?w=400&h=200&fit=crop",
         definition: { en: "to take in or soak up", zh: "吸收", ms: "menyerap", ta: "உறிஞ்சு", ja: "吸収する", zhTW: "吸收", ko: "흡수하다", th: "ดูดซับ", vi: "hấp thụ", id: "menyerap", es: "absorber", fr: "absorber", de: "absorbieren", ar: "امتصاص", ru: "впитывать", pt: "absorver", it: "assorbire", nl: "absorberen" },
         sentence: [
             { lang: 'en', text: "Plants absorb water through their roots." },
@@ -334,6 +337,7 @@ const DICT = {
         translations: { zh: "吸收", ms: "menyerap", ta: "உறிஞ்சு", ja: "吸収する", zhTW: "吸收", ko: "흡수하다", th: "ดูดซับ", vi: "hấp thụ", id: "menyerap", es: "absorber", fr: "absorber", de: "absorbieren", ar: "امتصاص", ru: "впитывать", pt: "absorver", it: "assorbire", nl: "absorberen" },
     },
     "achieve": {
+        image: "https://images.unsplash.com/photo-1579017382194-9268388a1309?w=400&h=200&fit=crop",
         definition: { en: "to successfully bring about a result", zh: "实现", ms: "mencapai", ta: "சாதி", ja: "達成する", zhTW: "實現", ko: "달성하다", th: "บรรลุ", vi: "đạt được", id: "mencapai", es: "lograr", fr: "atteindre", de: "erreichen", ar: "تحقيق", ru: "достигать", pt: "alcançar", it: "raggiungere", nl: "bereiken" },
         sentence: [
             { lang: 'en', text: "She worked hard to achieve her goals." },
@@ -358,6 +362,7 @@ const DICT = {
         translations: { zh: "实现", ms: "mencapai", ta: "சாதி", ja: "達成する", zhTW: "實現", ko: "달성하다", th: "บรรลุ", vi: "đạt được", id: "mencapai", es: "lograr", fr: "atteindre", de: "erreichen", ar: "تحقيق", ru: "достигать", pt: "alcançar", it: "raggiungere", nl: "bereiken" },
     },
     "balance": {
+        image: "https://images.unsplash.com/photo-1509762774637-f7b2c0682036?w=400&h=200&fit=crop",
         definition: { en: "an even distribution of weight", zh: "平衡", ms: "keseimbangan", ta: "சமநிலை", ja: "バランス", zhTW: "平衡", ko: "균형", th: "สมดุล", vi: "cân bằng", id: "keseimbangan", es: "equilibrio", fr: "équilibre", de: "Gleichgewicht", ar: "توازن", ru: "баланс", pt: "equilíbrio", it: "equilibrio", nl: "evenwicht" },
         sentence: [
             { lang: 'en', text: "Good balance is important in life." },
@@ -382,6 +387,7 @@ const DICT = {
         translations: { zh: "平衡", ms: "keseimbangan", ta: "சமநிலை", ja: "バランス", zhTW: "平衡", ko: "균형", th: "สมดุล", vi: "cân bằng", id: "keseimbangan", es: "equilibrio", fr: "équilibre", de: "Gleichgewicht", ar: "توازن", ru: "баланс", pt: "equilíbrio", it: "equilibrio", nl: "evenwicht" },
     },
     "brilliant": {
+        image: "https://images.unsplash.com/photo-1507400492013-162706c8c269?w=400&h=200&fit=crop",
         definition: { en: "very bright or intelligent", zh: "杰出的", ms: "cemerlang", ta: "அற்புதமான", ja: "素晴らしい", zhTW: "傑出的", ko: "훌륭한", th: "ฉลาดหลักแหลม", vi: "xuất sắc", id: "cemerlang", es: "brillante", fr: "brillant", de: "brillant", ar: "رائع", ru: "блестящий", pt: "brilhante", it: "brillante", nl: "briljant" },
         sentence: [
             { lang: 'en', text: "She had a brilliant idea for the project." },
@@ -406,6 +412,7 @@ const DICT = {
         translations: { zh: "杰出的", ms: "cemerlang", ta: "அற்புதமான", ja: "素晴らしい", zhTW: "傑出的", ko: "훌륭한", th: "ฉลาดหลักแหลม", vi: "xuất sắc", id: "cemerlang", es: "brillante", fr: "brillant", de: "brillant", ar: "رائع", ru: "блестящий", pt: "brilhante", it: "brillante", nl: "briljant" },
     },
     "courage": {
+        image: "https://images.unsplash.com/photo-1546182990-dffeafbe834c?w=400&h=200&fit=crop",
         definition: { en: "the ability to face danger or fear", zh: "勇气", ms: "keberanian", ta: "தைரியம்", ja: "勇気", zhTW: "勇氣", ko: "용기", th: "ความกล้าหาญ", vi: "dũng cảm", id: "keberanian", es: "coraje", fr: "courage", de: "Mut", ar: "شجاعة", ru: "мужество", pt: "coragem", it: "coraggio", nl: "moed" },
         sentence: [
             { lang: 'en', text: "It takes courage to speak in public." },
@@ -430,6 +437,7 @@ const DICT = {
         translations: { zh: "勇气", ms: "keberanian", ta: "தைரியம்", ja: "勇気", zhTW: "勇氣", ko: "용기", th: "ความกล้าหาญ", vi: "dũng cảm", id: "keberanian", es: "coraje", fr: "courage", de: "Mut", ar: "شجاعة", ru: "мужество", pt: "coragem", it: "coraggio", nl: "moed" },
     },
     "desire": {
+        image: "https://images.unsplash.com/photo-1518199266791-5375a8316dc8?w=400&h=200&fit=crop",
         definition: { en: "a strong feeling of wanting", zh: "渴望", ms: "keinginan", ta: "விருப்பம்", ja: "欲望", zhTW: "渴望", ko: "욕망", th: "ความปรารถนา", vi: "khát khao", id: "keinginan", es: "deseo", fr: "désir", de: "Verlangen", ar: "رغبة", ru: "желание", pt: "desejo", it: "desiderio", nl: "verlangen" },
         sentence: [
             { lang: 'en', text: "She has a strong desire to travel." },
@@ -454,6 +462,7 @@ const DICT = {
         translations: { zh: "渴望", ms: "keinginan", ta: "விருப்பம்", ja: "欲望", zhTW: "渴望", ko: "욕망", th: "ความปรารถนา", vi: "khát khao", id: "keinginan", es: "deseo", fr: "désir", de: "Verlangen", ar: "رغبة", ru: "желание", pt: "desejo", it: "desiderio", nl: "verlangen" },
     },
     "elegant": {
+        image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&h=200&fit=crop",
         definition: { en: "graceful and stylish", zh: "优雅的", ms: "anggun", ta: "நளினமான", ja: "優雅な", zhTW: "優雅的", ko: "우아한", th: "สง่างาม", vi: "thanh lịch", id: "anggun", es: "elegante", fr: "élégant", de: "elegant", ar: "أنيق", ru: "элегантный", pt: "elegante", it: "elegante", nl: "elegant" },
         sentence: [
             { lang: 'en', text: "She wore an elegant dress to the party." },
@@ -478,6 +487,7 @@ const DICT = {
         translations: { zh: "优雅的", ms: "anggun", ta: "நளினமான", ja: "優雅な", zhTW: "優雅的", ko: "우아한", th: "สง่างาม", vi: "thanh lịch", id: "anggun", es: "elegante", fr: "élégant", de: "elegant", ar: "أنيق", ru: "элегантный", pt: "elegante", it: "elegante", nl: "elegant" },
     },
     "flourish": {
+        image: "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=400&h=200&fit=crop",
         definition: { en: "to grow or develop in a healthy way", zh: "繁荣", ms: "berkembang", ta: "வளர்ச்சி", ja: "繁栄する", zhTW: "繁榮", ko: "번영하다", th: "เจริญรุ่งเรือง", vi: "phát đạt", id: "berkembang", es: "prosperar", fr: "prospérer", de: "gedeihen", ar: "يزدهر", ru: "процветать", pt: "prosperar", it: "prosperare", nl: "floreren" },
         sentence: [
             { lang: 'en', text: "The garden began to flourish in spring." },
@@ -502,6 +512,7 @@ const DICT = {
         translations: { zh: "繁荣", ms: "berkembang", ta: "வளர்ச்சி", ja: "繁栄する", zhTW: "繁榮", ko: "번영하다", th: "เจริญรุ่งเรือง", vi: "phát đạt", id: "berkembang", es: "prosperar", fr: "prospérer", de: "gedeihen", ar: "يزدهر", ru: "процветать", pt: "prosperar", it: "prosperare", nl: "floreren" },
     },
     "gentle": {
+        image: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&h=200&fit=crop",
         definition: { en: "mild in temperament; kind", zh: "温柔的", ms: "lembut", ta: "மென்மையான", ja: "優しい", zhTW: "溫柔的", ko: "부드러운", th: "อ่อนโยน", vi: "nhẹ nhàng", id: "lembut", es: "amable", fr: "doux", de: "sanft", ar: "لطيف", ru: "нежный", pt: "suave", it: "gentile", nl: "zacht" },
         sentence: [
             { lang: 'en', text: "She spoke in a gentle voice." },
@@ -526,6 +537,7 @@ const DICT = {
         translations: { zh: "温柔的", ms: "lembut", ta: "மென்மையான", ja: "優しい", zhTW: "溫柔的", ko: "부드러운", th: "อ่อนโยน", vi: "nhẹ nhàng", id: "lembut", es: "amable", fr: "doux", de: "sanft", ar: "لطيف", ru: "нежный", pt: "suave", it: "gentile", nl: "zacht" },
     },
     "harmony": {
+        image: "https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=400&h=200&fit=crop",
         definition: { en: "agreement or concord", zh: "和谐", ms: "keharmonian", ta: "நல்லிணக்கம்", ja: "調和", zhTW: "和諧", ko: "조화", th: "ความสามัคคี", vi: "hòa hợp", id: "keharmonian", es: "armonía", fr: "harmonie", de: "Harmonie", ar: "وئام", ru: "гармония", pt: "harmonia", it: "armonia", nl: "harmonie" },
         sentence: [
             { lang: 'en', text: "They live in harmony with nature." },
@@ -550,6 +562,7 @@ const DICT = {
         translations: { zh: "和谐", ms: "keharmonian", ta: "நல்லிணக்கம்", ja: "調和", zhTW: "和諧", ko: "조화", th: "ความสามัคคี", vi: "hòa hợp", id: "keharmonian", es: "armonía", fr: "harmonie", de: "Harmonie", ar: "وئام", ru: "гармония", pt: "harmonia", it: "armonia", nl: "harmonie" },
     },
     "imagine": {
+        image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400&h=200&fit=crop",
         definition: { en: "to form a mental image", zh: "想象", ms: "membayangkan", ta: "கற்பனை செய்", ja: "想像する", zhTW: "想像", ko: "상상하다", th: "จินตนาการ", vi: "tưởng tượng", id: "membayangkan", es: "imaginar", fr: "imaginer", de: "vorstellen", ar: "تخيل", ru: "воображать", pt: "imaginar", it: "immaginare", nl: "voorstellen" },
         sentence: [
             { lang: 'en', text: "Imagine a world without borders." },
@@ -574,6 +587,7 @@ const DICT = {
         translations: { zh: "想象", ms: "membayangkan", ta: "கற்பனை செய்", ja: "想像する", zhTW: "想像", ko: "상상하다", th: "จินตนาการ", vi: "tưởng tượng", id: "membayangkan", es: "imaginar", fr: "imaginer", de: "vorstellen", ar: "تخيل", ru: "воображать", pt: "imaginar", it: "immaginare", nl: "voorstellen" },
     },
     "journey": {
+        image: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=200&fit=crop",
         definition: { en: "an act of travelling from one place to another", zh: "旅程", ms: "perjalanan", ta: "பயணம்", ja: "旅", zhTW: "旅程", ko: "여정", th: "การเดินทาง", vi: "hành trình", id: "perjalanan", es: "viaje", fr: "voyage", de: "Reise", ar: "رحلة", ru: "путешествие", pt: "viagem", it: "viaggio", nl: "reis" },
         sentence: [
             { lang: 'en', text: "The journey took three hours." },
@@ -598,6 +612,7 @@ const DICT = {
         translations: { zh: "旅程", ms: "perjalanan", ta: "பயணம்", ja: "旅", zhTW: "旅程", ko: "여정", th: "การเดินทาง", vi: "hành trình", id: "perjalanan", es: "viaje", fr: "voyage", de: "Reise", ar: "رحلة", ru: "путешествие", pt: "viagem", it: "viaggio", nl: "reis" },
     },
     "knowledge": {
+        image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=200&fit=crop",
         definition: { en: "facts and information acquired by experience", zh: "知识", ms: "pengetahuan", ta: "அறிவு", ja: "知識", zhTW: "知識", ko: "지식", th: "ความรู้", vi: "kiến thức", id: "pengetahuan", es: "conocimiento", fr: "connaissance", de: "Wissen", ar: "معرفة", ru: "знание", pt: "conhecimento", it: "conoscenza", nl: "kennis" },
         sentence: [
             { lang: 'en', text: "Knowledge is power." },
@@ -622,6 +637,7 @@ const DICT = {
         translations: { zh: "知识", ms: "pengetahuan", ta: "அறிவு", ja: "知識", zhTW: "知識", ko: "지식", th: "ความรู้", vi: "kiến thức", id: "pengetahuan", es: "conocimiento", fr: "connaissance", de: "Wissen", ar: "معرفة", ru: "знание", pt: "conhecimento", it: "conoscenza", nl: "kennis" },
     },
     "liberty": {
+        image: "https://images.unsplash.com/photo-1501979247862-5ad4f98197c8?w=400&h=200&fit=crop",
         definition: { en: "the state of being free", zh: "自由", ms: "kebebasan", ta: "சுதந்திரம்", ja: "自由", zhTW: "自由", ko: "자유", th: "เสรีภาพ", vi: "tự do", id: "kebebasan", es: "libertad", fr: "liberté", de: "Freiheit", ar: "حرية", ru: "свобода", pt: "liberdade", it: "libertà", nl: "vrijheid" },
         sentence: [
             { lang: 'en', text: "Liberty is a fundamental human right." },
@@ -646,6 +662,7 @@ const DICT = {
         translations: { zh: "自由", ms: "kebebasan", ta: "சுதந்திரம்", ja: "自由", zhTW: "自由", ko: "자유", th: "เสรีภาพ", vi: "tự do", id: "kebebasan", es: "libertad", fr: "liberté", de: "Freiheit", ar: "حرية", ru: "свобода", pt: "liberdade", it: "libertà", nl: "vrijheid" },
     },
     "magnificent": {
+        image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=200&fit=crop",
         definition: { en: "impressively beautiful or elaborate", zh: "壮丽的", ms: "megah", ta: "அற்புதமான", ja: "壮大な", zhTW: "壯麗的", ko: "장엄한", th: "งดงาม", vi: "tráng lệ", id: "megah", es: "magnífico", fr: "magnifique", de: "großartig", ar: "رائع", ru: "великолепный", pt: "magnífico", it: "magnifico", nl: "magnifiek" },
         sentence: [
             { lang: 'en', text: "The view from the mountain was magnificent." },
@@ -670,6 +687,7 @@ const DICT = {
         translations: { zh: "壮丽的", ms: "megah", ta: "அற்புதமான", ja: "壮大な", zhTW: "壯麗的", ko: "장엄한", th: "งดงาม", vi: "tráng lệ", id: "megah", es: "magnífico", fr: "magnifique", de: "großartig", ar: "رائع", ru: "великолепный", pt: "magnífico", it: "magnifico", nl: "magnifiek" },
     },
     "observe": {
+        image: "https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?w=400&h=200&fit=crop",
         definition: { en: "to notice or perceive something", zh: "观察", ms: "memerhati", ta: "கவனி", ja: "観察する", zhTW: "觀察", ko: "관찰하다", th: "สังเกต", vi: "quan sát", id: "memerhati", es: "observar", fr: "observer", de: "beobachten", ar: "مراقبة", ru: "наблюдать", pt: "observar", it: "osservare", nl: "observeren" },
         sentence: [
             { lang: 'en', text: "Scientists observe the stars through telescopes." },
@@ -694,6 +712,7 @@ const DICT = {
         translations: { zh: "观察", ms: "memerhati", ta: "கவனி", ja: "観察する", zhTW: "觀察", ko: "관찰하다", th: "สังเกต", vi: "quan sát", id: "memerhati", es: "observar", fr: "observer", de: "beobachten", ar: "مراقبة", ru: "наблюдать", pt: "observar", it: "osservare", nl: "observeren" },
     },
     "paradise": {
+        image: "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=400&h=200&fit=crop",
         definition: { en: "an ideal or perfect place", zh: "天堂", ms: "syurga", ta: "சொர்க்கம்", ja: "楽園", zhTW: "天堂", ko: "낙원", th: "สวรรค์", vi: "thiên đường", id: "syurga", es: "paraíso", fr: "paradis", de: "Paradies", ar: "جنة", ru: "рай", pt: "paraíso", it: "paradiso", nl: "paradijs" },
         sentence: [
             { lang: 'en', text: "This island is a tropical paradise." },
@@ -718,6 +737,7 @@ const DICT = {
         translations: { zh: "天堂", ms: "syurga", ta: "சொர்க்கம்", ja: "楽園", zhTW: "天堂", ko: "낙원", th: "สวรรค์", vi: "thiên đường", id: "syurga", es: "paraíso", fr: "paradis", de: "Paradies", ar: "جنة", ru: "рай", pt: "paraíso", it: "paradiso", nl: "paradijs" },
     },
     "resilient": {
+        image: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=200&fit=crop",
         definition: { en: "able to recover quickly from difficulty", zh: "坚韧的", ms: "tabah", ta: "மீள்திறன்", ja: "回復力のある", zhTW: "堅韌的", ko: "회복력 있는", th: "ยืดหยุ่น", vi: "kiên cường", id: "tabah", es: "resiliente", fr: "résilient", de: "widerstandsfähig", ar: "مرن", ru: "устойчивый", pt: "resiliente", it: "resiliente", nl: "veerkrachtig" },
         sentence: [
             { lang: 'en', text: "Children are remarkably resilient." },
@@ -742,6 +762,7 @@ const DICT = {
         translations: { zh: "坚韧的", ms: "tabah", ta: "மீள்திறன்", ja: "回復力のある", zhTW: "堅韌的", ko: "회복력 있는", th: "ยืดหยุ่น", vi: "kiên cường", id: "tabah", es: "resiliente", fr: "résilient", de: "widerstandsfähig", ar: "مرن", ru: "устойчивый", pt: "resiliente", it: "resiliente", nl: "veerkrachtig" },
     },
     "thrive": {
+        image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=200&fit=crop",
         definition: { en: "to grow or develop well", zh: "茁壮成长", ms: "berkembang maju", ta: "செழித்து வளர்", ja: "繁栄する", zhTW: "茁壯成長", ko: "번성하다", th: "เจริญเติบโต", vi: "phát triển mạnh", id: "berkembang maju", es: "prosperar", fr: "prospérer", de: "gedeihen", ar: "يزدهر", ru: "процветать", pt: "prosperar", it: "prosperare", nl: "gedijen" },
         sentence: [
             { lang: 'en', text: "The business continued to thrive." },
@@ -766,6 +787,7 @@ const DICT = {
         translations: { zh: "茁壮成长", ms: "berkembang maju", ta: "செழித்து வளர்", ja: "繁栄する", zhTW: "茁壯成長", ko: "번성하다", th: "เจริญเติบโต", vi: "phát triển mạnh", id: "berkembang maju", es: "prosperar", fr: "prospérer", de: "gedeihen", ar: "يزدهر", ru: "процветать", pt: "prosperar", it: "prosperare", nl: "gedijen" },
     },
     "wisdom": {
+        image: "https://images.unsplash.com/photo-1518188049410-657c79e26e82?w=400&h=200&fit=crop",
         definition: { en: "the quality of having experience and good judgment", zh: "智慧", ms: "kebijaksanaan", ta: "ஞானம்", ja: "知恵", zhTW: "智慧", ko: "지혜", th: "ปัญญา", vi: "trí tuệ", id: "kebijaksanaan", es: "sabiduría", fr: "sagesse", de: "Weisheit", ar: "حكمة", ru: "мудрость", pt: "sabedoria", it: "saggezza", nl: "wijsheid" },
         sentence: [
             { lang: 'en', text: "Wisdom comes with age." },
@@ -1074,6 +1096,10 @@ function renderDefinition(entry, containerId, settings) {
     const container = document.getElementById(containerId);
     const langs = [settings.learnLang, settings.transLang1, settings.transLang2];
     let html = '';
+    // Word image (only shows online)
+    if (entry.image) {
+        html += `<img class="word-image" src="${escapeHtml(entry.image)}" alt="" onerror="this.style.display='none'">`;
+    }
     for (const lang of langs) {
         if (entry.definition && entry.definition[lang]) {
             html += `<div class="definition-line"><span class="def-lang-label">${LANGS[lang].native}</span>${escapeHtml(entry.definition[lang])}</div>`;
@@ -1094,10 +1120,27 @@ function renderSentences(wordKey, containerId) {
     const learnLang = settings.learnLang;
     const container = document.getElementById(containerId);
 
+    // If regenerated, pick random 3 sentences from all languages
+    // If not, pick learnLang + transLang1 + transLang2
     let picked;
     if (_sentenceShuffle[containerId]) {
-        // Random 3 sentences from all available
-        picked = [...entry.sentence].sort(function() { return Math.random() - 0.5; }).slice(0, 3);
+        // Random 3 from all sentences, display in settings order
+        const shuffled = [...entry.sentence].sort(function() { return Math.random() - 0.5; });
+        picked = [];
+        // Always show exactly 3, prioritizing settings languages but allow random
+        const order = [learnLang, settings.transLang1, settings.transLang2];
+        const usedLangs = new Set();
+        // First, check if shuffled sentences contain any of our preset langs
+        for (const lang of order) {
+            if (picked.length >= 3) break;
+            const found = shuffled.find(function(s) { return s.lang === lang && !usedLangs.has(s.lang); });
+            if (found) { picked.push(found); usedLangs.add(found.lang); }
+        }
+        // Fill remaining slots from random sentences
+        for (const s of shuffled) {
+            if (picked.length >= 3) break;
+            if (!usedLangs.has(s.lang)) { picked.push(s); usedLangs.add(s.lang); }
+        }
     } else {
         // Default: learnLang + transLang1 + transLang2 in order
         picked = [];
@@ -1137,6 +1180,11 @@ function renderSentences(wordKey, containerId) {
     </div>`;
 
     container.innerHTML = html;
+}
+
+function regenerateSentences(wordKey, containerId) {
+    _sentenceShuffle[containerId] = true;
+    renderSentences(wordKey, containerId);
 }
 
 function regenerateSentences(wordKey, containerId) {
