@@ -1187,11 +1187,6 @@ function regenerateSentences(wordKey, containerId) {
     renderSentences(wordKey, containerId);
 }
 
-function regenerateSentences(wordKey, containerId) {
-    _sentenceShuffle[containerId] = true;
-    renderSentences(wordKey, containerId);
-}
-
 function saveCurrentWord() {
     if (currentWord && currentUser) {
         const settings = getCurrentSettings();
