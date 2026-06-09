@@ -126,11 +126,6 @@
                 <span class="btn-ms">Keluar</span>
             </button>
         </div>
-        <div id="data-btns" class="data-btns hidden">
-            <button class="data-btn" onclick="exportUser()">Export Data</button>
-            <button class="data-btn" onclick="document.getElementById('import-file').click()">Import Data</button>
-            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importUser(event)">
-        </div>
     </div>
 
     <!-- Settings -->
@@ -155,6 +150,12 @@
                 <span class="btn-en">Select User</span>
                 <span class="btn-zh">选择用户</span>
             </button>
+        </div>
+        <div class="section-label" id="data-section-label">Data Management</div>
+        <div class="data-btns" id="data-btns" style="display:none;">
+            <button class="data-btn" onclick="exportUser()">Export Data</button>
+            <button class="data-btn" onclick="document.getElementById('import-file').click()">Import Data</button>
+            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importUser(event)">
         </div>
         <button class="action-btn secondary back-btn" style="margin-top:20px;" onclick="showPage('menu')">Back to Menu</button>
     </div>
@@ -250,7 +251,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v2.0.1.0';
+const APP_VERSION = 'v1.0.0.0';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -910,7 +911,8 @@ function updateMenuButtons() {
     document.getElementById('user-status').textContent = currentUser
         ? `Logged in as: ${currentUser}`
         : 'No user selected';
-    document.getElementById('data-btns').classList.toggle('hidden', !currentUser);
+    document.getElementById('data-btns').style.display = currentUser ? 'flex' : 'none';
+    document.getElementById('data-section-label').style.display = currentUser ? '' : 'none';
     document.getElementById('lang-settings').classList.toggle('hidden', !currentUser);
     const settings = getCurrentSettings();
     const langName = LANGS[settings.learnLang] ? LANGS[settings.learnLang].name : 'Language';
