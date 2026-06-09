@@ -1,4 +1,4 @@
-const CACHE_NAME = 'el-cache-v10';
+const CACHE_NAME = 'el-cache-v11';
 const FILES = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', function(e) {
@@ -25,6 +25,10 @@ self.addEventListener('activate', function(e) {
 });
 
 self.addEventListener('fetch', function(e) {
+    // Only handle http/https requests — ignore chrome-extension, devtools, etc.
+    if (e.request.url.startsWith('chrome-extension') || e.request.url.startsWith('chrome-devtools') || e.request.url.startsWith('ws:')) {
+        return;
+    }
     var url = new URL(e.request.url);
     // Always fetch index.html from network (it contains the latest JS)
     if (e.request.mode === 'navigate' || (url.pathname.endsWith('.html') || url.pathname.endsWith('/'))) {
