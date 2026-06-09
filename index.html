@@ -280,7 +280,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.2.1';
+const APP_VERSION = 'v1.0.2.2';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -288,7 +288,7 @@ const LANGS = {
     en: { name: 'English', native: 'English', tts: 'en-US' },
     zh: { name: 'Chinese (Simplified)', native: '中文 (简体)', tts: 'zh-CN' },
     zhTW: { name: 'Chinese (Traditional)', native: '中文 (繁體)', tts: 'zh-TW' },
-    ms: { name: 'Malay', native: 'Bahasa Melayu', tts: 'id-ID' },
+    ms: { name: 'Malay', native: 'Bahasa Melayu', tts: 'ms-MY' },
     ta: { name: 'Tamil', native: 'தமிழ்', tts: 'ta-IN' },
     ja: { name: 'Japanese', native: '日本語', tts: 'ja-JP' },
     ko: { name: 'Korean', native: '한국어', tts: 'ko-KR' },
@@ -1625,8 +1625,14 @@ function speakWord(text, lang) {
     const langCode = lang ? lang.split('-')[0] : 'en';
     const voices = speechSynthesis.getVoices();
     function trySpeak() {
-        const vs = speechSynthesis.getVoices();
-        var found = vs.find(function(v) { return v.lang === lang; })
+        var vs = speechSynthesis.getVoices();
+        // For Malay: try ms-MY first, fall back to id-ID if not available
+        var actualLang = lang;
+        if (lang === 'ms-MY' && !vs.find(function(v) { return v.lang.startsWith('ms'); })) {
+            actualLang = 'id-ID';
+        }
+        var found = vs.find(function(v) { return v.lang === actualLang; })
+                  || vs.find(function(v) { return v.lang.startsWith(actualLang.split('-')[0]); })
                   || vs.find(function(v) { return v.lang.startsWith(langCode); });
         if (found) u.voice = found;
         speechSynthesis.speak(u);
