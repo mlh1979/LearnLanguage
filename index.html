@@ -1094,24 +1094,23 @@ function renderSentences(wordKey, containerId) {
     const learnLang = settings.learnLang;
     const container = document.getElementById(containerId);
 
-    // Always pick the 3 preset languages, shuffle their display order
-    const picked = [];
-    const seen = new Set();
-    const priorityLangs = [learnLang, settings.transLang1, settings.transLang2];
-    for (const pLang of priorityLangs) {
-        const sent = entry.sentence.find(s => s.lang === pLang);
-        if (sent && !seen.has(sent.lang)) { picked.push(sent); seen.add(sent.lang); }
-    }
-    // Fill with others if needed
-    for (const sent of entry.sentence) {
-        if (picked.length >= 3) break;
-        if (!seen.has(sent.lang)) { picked.push(sent); seen.add(sent.lang); }
-    }
-
-    // Shuffle the order if regenerated
-    let sentences = picked;
+    let picked;
     if (_sentenceShuffle[containerId]) {
-        sentences = [...picked].sort(function() { return Math.random() - 0.5; });
+        // Random 3 sentences from all available
+        picked = [...entry.sentence].sort(function() { return Math.random() - 0.5; }).slice(0, 3);
+    } else {
+        // Default: learnLang + transLang1 + transLang2 in order
+        picked = [];
+        const seen = new Set();
+        const priorityLangs = [learnLang, settings.transLang1, settings.transLang2];
+        for (const pLang of priorityLangs) {
+            const sent = entry.sentence.find(s => s.lang === pLang);
+            if (sent && !seen.has(sent.lang)) { picked.push(sent); seen.add(sent.lang); }
+        }
+        for (const sent of entry.sentence) {
+            if (picked.length >= 3) break;
+            if (!seen.has(sent.lang)) { picked.push(sent); seen.add(sent.lang); }
+        }
     }
 
     let html = '';
@@ -1124,7 +1123,7 @@ function renderSentences(wordKey, containerId) {
         <button class="sentence-btn" onclick="speakWord('${escapeHtml(wordKey)}','${wordTts}')">🔊</button>
     </div>`;
 
-    for (const sent of sentences) {
+    for (const sent of picked) {
         const tts = LANGS[sent.lang] ? LANGS[sent.lang].tts : 'en-US';
         html += `<div class="sentence-row">
             <span class="sentence-lang">${LANGS[sent.lang].native}</span>
@@ -1141,12 +1140,8 @@ function renderSentences(wordKey, containerId) {
 }
 
 function regenerateSentences(wordKey, containerId) {
-    const entry = DICT[wordKey];
-    if (!entry || !entry.sentence) return;
-    // Mark as shuffled - renderSentences will randomize the display order
     _sentenceShuffle[containerId] = true;
     renderSentences(wordKey, containerId);
-}
 }
 
 function saveCurrentWord() {
@@ -1198,7 +1193,6 @@ function showTestAnswer() {
     // Show sentences
     const panel = document.getElementById('test-sentences');
     panel.classList.remove('hidden');
-    _sentenceShuffle['test-sentences'] = null; // reset shuffle on new word
     renderSentences(testData.word, 'test-sentences');
 }
 
