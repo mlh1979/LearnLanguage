@@ -279,7 +279,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.2.4';
+const APP_VERSION = 'v1.0.2.5';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -1255,16 +1255,14 @@ async function fetchAndShowOnlineWord(learned) {
                     allSentences.push(sentObj);
                 }
 
-                // Pick 3 random sentences for display
+                // Pick 1 random sentence with all 3 language translations
                 const shuffledExamples = allSentences.sort(function() { return Math.random() - 0.5; });
-                const picked = shuffledExamples.slice(0, Math.min(3, shuffledExamples.length));
+                const picked = shuffledExamples[0];
 
                 const sentences = [];
-                for (const s of picked) {
-                    sentences.push({ lang: 'en', text: s.en });
-                    for (const tl of transLangs) {
-                        if (s[tl]) sentences.push({ lang: tl, text: s[tl] });
-                    }
+                sentences.push({ lang: 'en', text: picked.en });
+                for (const tl of transLangs) {
+                    if (picked[tl]) sentences.push({ lang: tl, text: picked[tl] });
                 }
 
                 const definition = { en: def };
@@ -1457,18 +1455,16 @@ function regenerateSentences(wordKey, containerId) {
     if (!entry) return;
     _sentenceShuffle[containerId] = true;
 
-    // For online words with a sentence pool, pick 3 random sentences from the pool
+    // For online words with a sentence pool, pick 1 random sentence with all 3 language translations
     if (entry._sentencePool && entry._sentencePool.length > 1) {
         const settings = getCurrentSettings();
         const transLangs = [settings.transLang1, settings.transLang2];
         const shuffled = entry._sentencePool.sort(function() { return Math.random() - 0.5; });
-        const picked = shuffled.slice(0, Math.min(3, shuffled.length));
+        const picked = shuffled[0]; // pick 1 random sentence
         const sentences = [];
-        for (const s of picked) {
-            sentences.push({ lang: 'en', text: s.en });
-            for (const tl of transLangs) {
-                if (s[tl]) sentences.push({ lang: tl, text: s[tl] });
-            }
+        sentences.push({ lang: 'en', text: picked.en });
+        for (const tl of transLangs) {
+            if (picked[tl]) sentences.push({ lang: tl, text: picked[tl] });
         }
         entry.sentence = sentences;
     }
