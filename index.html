@@ -280,7 +280,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.1.9';
+const APP_VERSION = 'v1.0.2.0';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -1203,10 +1203,24 @@ async function fetchAndShowOnlineWord(learned) {
             if (resp.ok) {
                 const data = await resp.json();
                 const entry = data[0];
-                const def = entry.meanings && entry.meanings[0] && entry.meanings[0].definitions && entry.meanings[0].definitions[0]
-                    ? entry.meanings[0].definitions[0].definition : '';
-                const example = entry.meanings && entry.meanings[0] && entry.meanings[0].definitions && entry.meanings[0].definitions[0]
-                    ? entry.meanings[0].definitions[0].example || '' : '';
+                const word = entry.word;
+
+                // Search all meanings for definition and example
+                var def = '';
+                var example = '';
+                if (entry.meanings) {
+                    for (var m = 0; m < entry.meanings.length; m++) {
+                        var defs = entry.meanings[m].definitions || [];
+                        for (var d = 0; d < defs.length; d++) {
+                            if (!def && defs[d].definition) def = defs[d].definition;
+                            if (!example && defs[d].example) example = defs[d].example;
+                            if (def && example) break;
+                        }
+                        if (def && example) break;
+                    }
+                }
+                // Fallback example that actually uses the word
+                if (!example) example = 'The word "' + word + '" means ' + (def || 'something important');
 
                 // Get user's settings for translation
                 const settings = getCurrentSettings();
@@ -1226,7 +1240,7 @@ async function fetchAndShowOnlineWord(learned) {
 
                 // Translate example sentence
                 const sentTranslations = {};
-                const enText = example || (entry.word + ' is a useful word to know.');
+                const enText = example;
                 for (const tl of transLangs) {
                     try {
                         const tResp = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=' + tl + '&dt=t&q=' + encodeURIComponent(enText));
@@ -1249,7 +1263,7 @@ async function fetchAndShowOnlineWord(learned) {
 
                 currentWord = entry.word;
                 DICT[entry.word] = {
-                    image: "https://loremflickr.com/400/200/" + encodeURIComponent(entry.word) + "/all?lock=" + Date.now(),
+                    image: "https://loremflickr.com/400/200/" + encodeURIComponent(entry.word),
                     definition: definition,
                     sentence: sentences,
                     translations: {}
@@ -1306,7 +1320,7 @@ async function refreshCachedWords() {
                     ? entry.meanings[0].definitions[0].example || '' : '';
                 results.push({
                     word: entry.word,
-                    image: "https://loremflickr.com/400/200/" + encodeURIComponent(entry.word) + "/all?lock=" + Date.now(),
+                    image: "https://loremflickr.com/400/200/" + encodeURIComponent(entry.word),
                     definition: { en: def, zh: "", ms: "", ta: "", ja: "", zhTW: "", ko: "", th: "", vi: "", id: "", es: "", fr: "", de: "", ar: "", ru: "", pt: "", it: "", nl: "" },
                     sentence: [
                         { lang: 'en', text: example || (entry.word + ' is a useful word to know.') },
@@ -1608,13 +1622,23 @@ function speakWord(text, lang) {
     const u = new SpeechSynthesisUtterance(text);
     u.lang = lang || 'en-US';
     u.rate = 0.85;
-    // Try to find a matching voice
-    const voices = speechSynthesis.getVoices();
     const langCode = lang ? lang.split('-')[0] : 'en';
-    for (const v of voices) {
-        if (v.lang.startsWith(langCode)) { u.voice = v; break; }
+    const voices = speechSynthesis.getVoices();
+    function trySpeak() {
+        const vs = speechSynthesis.getVoices();
+        var found = vs.find(function(v) { return v.lang === lang; })
+                  || vs.find(function(v) { return v.lang.startsWith(langCode); });
+        if (found) u.voice = found;
+        speechSynthesis.speak(u);
     }
-    speechSynthesis.speak(u);
+    if (voices.length === 0) {
+        speechSynthesis.onvoiceschanged = function() {
+            speechSynthesis.onvoiceschanged = null;
+            trySpeak();
+        };
+    } else {
+        trySpeak();
+    }
 }
 
 // Bind events
