@@ -78,7 +78,19 @@
         #connection-status { position: fixed; top: 12px; right: 16px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.8); z-index: 10000; transition: background 0.3s; }
         #connection-status.online { background: #22c55e; }
         #connection-status.offline { background: #ef4444; }
-        @media (max-width: 480px) { #app { max-width: 100%; } .word-display { font-size: 28px; } .action-btn { min-width: 100px; padding: 10px 16px; font-size: 14px; } }
+        /* Learn page panels */
+        .learn-panel { background: #f8f9fa; border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid #e9ecef; }
+        .panel-label { font-size: 11px; color: #6366f1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+        .learn-words { display: flex; flex-direction: column; gap: 10px; }
+        .learn-word-card { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: 10px; padding: 12px 16px; border: 1px solid #e0e0e0; }
+        .learn-word-text { font-size: 22px; font-weight: 700; color: #1a1a2e; flex: 1; }
+        .learn-word-text.primary { font-size: 28px; color: #4a6cf7; }
+        .learn-word-tts { background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px 8px; opacity: 0.7; flex-shrink: 0; }
+        .learn-word-tts:hover { opacity: 1; }
+        .learn-def-list { display: flex; flex-direction: column; gap: 8px; }
+        .learn-sentences-list { display: flex; flex-direction: column; gap: 6px; }
+        .learn-regenerate-row { text-align: center; margin-top: 12px; }
+        @media (max-width: 480px) { #app { max-width: 100%; } .word-display { font-size: 28px; } .action-btn { min-width: 100px; padding: 10px 16px; font-size: 14px; } .learn-word-text { font-size: 18px; } .learn-word-text.primary { font-size: 22px; } .learn-panel { padding: 12px; } }
     </style>
 </head>
 <body>
@@ -177,9 +189,19 @@
 
     <!-- Learn -->
     <div id="learn" class="page hidden">
-        <div id="learn-word" class="word-display"></div>
-        <div id="learn-def" class="definition"></div>
-        <div id="learn-sentences" class="sentence-panel"></div>
+        <div class="learn-panel">
+            <div class="panel-label">Word</div>
+            <div id="learn-words" class="learn-words"></div>
+        </div>
+        <div class="learn-panel">
+            <div class="panel-label">Definitions</div>
+            <div id="learn-def" class="learn-def-list"></div>
+        </div>
+        <div class="learn-panel">
+            <div class="panel-label">Sample Sentences</div>
+            <div id="learn-sentences" class="learn-sentences-list"></div>
+            <div id="learn-regenerate" class="learn-regenerate-row"></div>
+        </div>
         <div class="btn-row">
             <button class="action-btn" onclick="doLearn()">Next Word</button>
             <button class="action-btn secondary" onclick="saveAndBack()">Back to Menu</button>
@@ -245,7 +267,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.3.1';
+const APP_VERSION = 'v1.0.4.0';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -1379,9 +1401,74 @@ function renderLearnPage() {
     const entry = DICT[currentWord];
     if (!entry) return;
     const settings = getCurrentSettings();
-    document.getElementById('learn-word').textContent = currentWord.charAt(0).toUpperCase() + currentWord.slice(1);
+    renderLearnWords(entry, settings);
     renderDefinition(entry, 'learn-def', settings);
-    renderSentences(currentWord, 'learn-sentences');
+    renderLearnSentences(currentWord, 'learn-sentences', 'learn-regenerate');
+}
+
+// Panel 1: Word display - learnLang word + translations, each with TTS
+function renderLearnWords(entry, settings) {
+    const container = document.getElementById('learn-words');
+    const langs = [settings.learnLang, settings.transLang1, settings.transLang2];
+    let html = '';
+
+    for (var i = 0; i < langs.length; i++) {
+        const lang = langs[i];
+        const langInfo = LANGS[lang];
+        const tts = langInfo ? langInfo.tts : 'en-US';
+
+        var wordText;
+        if (i === 0) {
+            wordText = currentWord.charAt(0).toUpperCase() + currentWord.slice(1);
+        } else {
+            wordText = (entry.translations && entry.translations[lang]) ||
+                       (entry.definition && entry.definition[lang]) ||
+                       currentWord;
+        }
+
+        var escaped = escapeHtmlForAttr(wordText);
+        html += '<div class="learn-word-card">' +
+            '<span class="learn-word-text' + (i === 0 ? ' primary' : '') + '">' + escapeHtml(wordText) + '</span>' +
+            '<button class="learn-word-tts" onclick="speakWord(\'' + escaped + '\',\'' + tts + '\')">🔊</button>' +
+            '</div>';
+    }
+
+    container.innerHTML = html;
+}
+
+// Panel 3: Sentences for learn page (no word row, separate regen button)
+function renderLearnSentences(wordKey, listId, regenId) {
+    const entry = DICT[wordKey];
+    const listEl = document.getElementById(listId);
+    const regenEl = document.getElementById(regenId);
+    if (!entry) { listEl.innerHTML = ''; regenEl.innerHTML = ''; return; }
+    const settings = getCurrentSettings();
+
+    const order = [settings.learnLang, settings.transLang1, settings.transLang2];
+    const allLangs = Object.keys(LANGS);
+    const fallbackOrder = allLangs.filter(function(l) { return order.indexOf(l) === -1; });
+    const fullOrder = order.concat(fallbackOrder);
+    const picked = [];
+    const seen = new Set();
+    for (const lang of fullOrder) {
+        const sent = entry.sentence.find(function(s) { return s.lang === lang; });
+        if (sent && !seen.has(sent.lang)) { picked.push(sent); seen.add(sent.lang); }
+    }
+
+    let html = '';
+    for (const sent of picked) {
+        const tts = LANGS[sent.lang] ? LANGS[sent.lang].tts : 'en-US';
+        var esc = escapeHtmlForAttr(sent.text);
+        html += '<div class="sentence-row">' +
+            '<span class="sentence-lang">' + LANGS[sent.lang].native + '</span>' +
+            '<span class="sentence-text">' + escapeHtml(sent.text) + '</span>' +
+            '<button class="sentence-btn" onclick="speakWord(\'' + esc + '\',\'' + tts + '\')">🔊</button>' +
+            '</div>';
+    }
+    listEl.innerHTML = html;
+
+    var escKey = escapeHtmlForAttr(wordKey);
+    regenEl.innerHTML = '<button class="action-btn secondary" style="padding:8px 16px;font-size:13px;min-width:auto;" onclick="regenerateSentences(\'' + escKey + '\',\'' + listId + '\',\'' + regenId + '\')">Regenerate Sentences</button>';
 }
 
 function renderDefinition(entry, containerId, settings) {
@@ -1399,6 +1486,11 @@ function renderDefinition(entry, containerId, settings) {
 
 function escapeHtml(str) {
     return str.replace(/'/g, "\\'").replace(/\\/g, '\\\\');
+}
+
+// Escape for inline onclick attribute values (handles quotes and HTML entities)
+function escapeHtmlForAttr(str) {
+    return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 // Shared sentence renderer
@@ -1447,7 +1539,7 @@ function renderSentences(wordKey, containerId) {
     container.innerHTML = html;
 }
 
-function regenerateSentences(wordKey, containerId) {
+function regenerateSentences(wordKey, containerId, regenContainerId) {
     const entry = DICT[wordKey];
     if (!entry) return;
     _sentenceShuffle[containerId] = true;
@@ -1482,7 +1574,12 @@ function regenerateSentences(wordKey, containerId) {
         entry.sentence = newSentences;
     }
 
-    renderSentences(wordKey, containerId);
+    // Dispatch to the correct renderer
+    if (containerId === 'learn-sentences') {
+        renderLearnSentences(wordKey, containerId, regenContainerId);
+    } else {
+        renderSentences(wordKey, containerId);
+    }
 }
 
 function saveCurrentWord() {
@@ -1716,7 +1813,7 @@ window.importUser = importUser;
 // Init
 // Step 1: Validate localStorage — if anything is broken, wipe and start fresh
 (function() {
-    var keys = ['el_users', 'el_last_user', 'el_debug_log', 'el_cached_words'];
+    var keys = ['el_users', 'el_debug_log', 'el_cached_words'];
     var allOK = true;
     for (var i = 0; i < keys.length; i++) {
         try {
