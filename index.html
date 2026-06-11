@@ -106,13 +106,14 @@
     <!-- Menu -->
     <div id="menu" class="page">
         <div class="btn-grid">
-            <button class="menu-btn" id="menu-btn-settings" onclick="showPage('settings')"></button>
-            <button class="menu-btn" id="menu-btn-create" onclick="showPage('create-user')" style="display:none;"></button>
-            <button class="menu-btn" id="menu-btn-select" onclick="showPage('select-user')" style="display:none;"></button>
             <button class="menu-btn" id="btn-learn" onclick="doLearn()" disabled></button>
             <button class="menu-btn" id="btn-test" onclick="doTest()" disabled></button>
             <button class="menu-btn" id="btn-review" onclick="doReview()" disabled></button>
             <button class="menu-btn" id="btn-translate" onclick="doTranslate()" disabled></button>
+            <button class="menu-btn" id="menu-btn-create" onclick="showPage('create-user')" style="display:none;"></button>
+            <button class="menu-btn" id="menu-btn-select" onclick="showPage('select-user')" style="display:none;"></button>
+            <button class="menu-btn" id="btn-import-words" onclick="importMoreWords()" style="opacity:0.6;font-size:11px;padding:10px 12px;"></button>
+            <button class="menu-btn" id="menu-btn-settings" onclick="showPage('settings')"></button>
             <button class="menu-btn quit-btn" id="btn-quit" onclick="window.close() || alert('Please close the browser tab manually.')"></button>
         </div>
     </div>
@@ -313,7 +314,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.7.0';
+const APP_VERSION = 'v1.0.8.0';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -346,6 +347,7 @@ const MENU_LABELS = {
     'btn-test': { en: 'Test', zh: '测试', zhTW: '測驗', ms: 'Ujian', ta: 'சோதனை', ja: 'テスト', ko: '테스트', th: 'ทดสอบ', vi: 'Kiểm tra', id: 'Ujian', es: 'Prueba', fr: 'Test', de: 'Test', ar: 'اختبار', ru: 'Тест', pt: 'Teste', it: 'Test', nl: 'Test' },
     'btn-review': { en: 'Review Today', zh: '今日复习', zhTW: '今日複習', ms: 'Semak Hari Ini', ta: 'இன்று மீள்பார்வை', ja: '今日の復習', ko: '오늘 복습', th: 'ทบทวนวันนี้', vi: 'Ôn tập hôm nay', id: 'Semak Hari Ini', es: 'Repasar Hoy', fr: 'Réviser Aujourd\'hui', de: 'Heute wiederholen', ar: 'مراجعة اليوم', ru: 'Повторить сегодня', pt: 'Revisar Hoje', it: 'Rivedi Oggi', nl: 'Vandaag Herhalen' },
     'btn-translate': { en: 'Translate', zh: '翻译', zhTW: '翻譯', ms: 'Terjemah', ta: 'மொழிபெயர்', ja: '翻訳', ko: '번역', th: 'แปลภาษา', vi: 'Dịch', id: 'Terjemah', es: 'Traducir', fr: 'Traduire', de: 'Übersetzen', ar: 'ترجمة', ru: 'Перевести', pt: 'Traduzir', it: 'Traduci', nl: 'Vertalen' },
+    'btn-import-words': { en: 'Import 100 Words', zh: '导入100词', zhTW: '匯入100詞', ms: 'Import 100 Perkataan', ta: '100 சொற்கள்', ja: '100語インポート', ko: '100단어 가져오기', th: 'นำเข้า 100 คำ', vi: 'Nhập 100 từ', id: 'Import 100 Kata', es: 'Importar 100', fr: 'Importer 100', de: '100 Wörter', ar: 'استيراد 100', ru: '100 слов', pt: 'Importar 100', it: 'Importa 100', nl: '100 woorden' },
     'btn-quit': { en: 'Quit', zh: '退出', zhTW: '離開', ms: 'Keluar', ta: 'வெளியேறு', ja: '終了', ko: '종료', th: 'ออก', vi: 'Thoát', id: 'Keluar', es: 'Salir', fr: 'Quitter', de: 'Beenden', ar: 'خروج', ru: 'Выйти', pt: 'Sair', it: 'Esci', nl: 'Afsluiten' },
     'btn-debug': { en: 'Debug Log', zh: '调试日志', zhTW: '偵錯日誌', ms: 'Log Nyahpepijat', ta: 'பிழைதிருத்த பதிவு', ja: 'デバッグログ', ko: '디버그 로그', th: 'บันทึกดีบัก', vi: 'Nhật ký Gỡ lỗi', id: 'Log Nyahpepijat', es: 'Registro Depuración', fr: 'Journal Débogage', de: 'Debug-Protokoll', ar: 'سجل التصحيح', ru: 'Журнал отладки', pt: 'Log Depuração', it: 'Log Debug', nl: 'Debug-log' },
     'btn-review-prev': { en: 'Previous Word', zh: '上一个单词', zhTW: '上一個單詞', ms: 'Perkataan Sebelumnya', ta: 'முந்தைய சொல்', ja: '前の単語', ko: '이전 단어', th: 'คำก่อนหน้า', vi: 'Từ trước', id: 'Perkataan Sebelumnya', es: 'Palabra Anterior', fr: 'Mot Précédent', de: 'Vorheriges Wort', ar: 'الكلمة السابقة', ru: 'Предыдущее слово', pt: 'Palavra Anterior', it: 'Parola Precedente', nl: 'Vorige Woord' },
@@ -4089,7 +4091,7 @@ function updateMenuButtons() {
         ? [settings.learnLang, settings.transLang1, settings.transLang2]
         : ['en', 'zh', 'ms'];
     var btnMap = { 'btn-quit': 'btn-quit' };
-    var menuBtns = ['menu-btn-settings', 'menu-btn-create', 'menu-btn-select', 'btn-learn', 'btn-test', 'btn-review', 'btn-translate', 'btn-quit'];
+    var menuBtns = ['btn-learn', 'btn-test', 'btn-review', 'btn-translate', 'menu-btn-create', 'menu-btn-select', 'btn-import-words', 'menu-btn-settings', 'btn-quit'];
     for (var mi = 0; mi < menuBtns.length; mi++) {
         var btnId = menuBtns[mi];
         var el = document.getElementById(btnId);
@@ -4519,6 +4521,50 @@ async function autoLoadWords(learned) {
     } else {
         showEmpty('Failed to load new words. Check internet connection.\n无法加载新词，请检查网络。');
     }
+}
+
+// Import 100 more words from the menu button
+async function importMoreWords() {
+    if (!navigator.onLine) { alert('Need internet connection to import words.\n需要联网才能导入单词。'); return; }
+    if (!confirm('Import 100 more words into dictionary? This may take a moment.\n\n导入100个新词到词库？可能需要一些时间。')) return;
+
+    var pool = [
+        "abandon","absorb","achieve","balance","brilliant","courage","desire","elegant","flourish","gentle",
+        "harmony","imagine","journey","knowledge","liberty","magnificent","observe","paradise","resilient","thrive",
+        "wisdom","adventure","brave","calm","dream","energy","focus","grace","hope","inspire",
+        "joy","kind","loyal","mind","noble","peace","quest","rise","spirit","trust",
+        "unity","value","warm","yield","zeal","ancient","bright","clear","deep","earth",
+        "faith","glory","honor","ideal","just","keen","lively","mere","oath",
+        "pure","rare","safe","true","vast","wise","young","bold","daring",
+        "eager","free","gift","humble","iron","joke","luck","mild","neat",
+        "proud","sincere","vivid","gentle","steady","curious","patient","swift","vital",
+        "amaze","breeze","charm","dazzle","embrace","fierce","gleam","harbor","impact","jolly",
+        "legend","majestic","nurture","opulent","pledge","radiant","savor","triumph","unfold","wonder",
+        "aspire","beneath","clarity","dignity","essence","fervor","glimpse","humble","ignite","legacy"
+    ];
+    var newWords = [...new Set(pool)].filter(function(w) { return !DICT[w]; });
+    if (newWords.length === 0) { alert('All words already in dictionary.\n所有词已在词库中。'); return; }
+
+    var count = Math.min(100, newWords.length);
+    var imported = 0;
+    for (var i = 0; i < count; i++) {
+        const word = newWords[i];
+        try {
+            const def = await fetchWordDefinition(word);
+            if (def) {
+                const translations = await translateWord(word);
+                var definition = { en: def };
+                for (var lang in translations) { definition[lang] = translations[lang] || ''; }
+                DICT[word] = {
+                    definition: definition,
+                    sentence: [],
+                    translations: translations
+                };
+                imported++;
+            }
+        } catch(e) {}
+    }
+    alert('Imported ' + imported + ' words into dictionary.\n已导入 ' + imported + ' 个词到词库。');
 }
 
 function renderLearnPage() {
