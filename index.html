@@ -267,7 +267,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.4.0';
+const APP_VERSION = 'v1.0.5.0';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -1248,7 +1248,20 @@ async function fetchAndShowOnlineWord(learned) {
                 const settings = getCurrentSettings();
                 const transLangs = [settings.transLang1, settings.transLang2];
 
-                // Translate definition
+                // Translate the WORD itself for all non-learn languages (Panel 1 word translations)
+                const wordTranslations = {};
+                const allTransLangs = Object.keys(LANGS).filter(function(l) { return l !== settings.learnLang; });
+                for (const tl of allTransLangs) {
+                    try {
+                        const wtResp = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=' + tl + '&dt=t&q=' + encodeURIComponent(word));
+                        const wtData = await wtResp.json();
+                        if (wtData && wtData[0]) {
+                            wordTranslations[tl] = wtData[0].map(function(p) { return p[0]; }).join('');
+                        }
+                    } catch(e) { wordTranslations[tl] = ''; }
+                }
+
+                // Translate definition (only for transLang1 and transLang2)
                 const defTranslations = {};
                 for (const tl of transLangs) {
                     try {
@@ -1295,7 +1308,7 @@ async function fetchAndShowOnlineWord(learned) {
                 DICT[entry.word] = {
                     definition: definition,
                     sentence: sentences,
-                    translations: {},
+                    translations: wordTranslations,
                     _sentencePool: allSentences // store ALL sentences for regenerate
                 };
                 renderLearnPage();
@@ -1539,31 +1552,110 @@ function renderSentences(wordKey, containerId) {
     container.innerHTML = html;
 }
 
-function regenerateSentences(wordKey, containerId, regenContainerId) {
+async function regenerateSentences(wordKey, containerId, regenContainerId) {
     const entry = DICT[wordKey];
     if (!entry) return;
     _sentenceShuffle[containerId] = true;
 
     const settings = getCurrentSettings();
     const transLangs = [settings.transLang1, settings.transLang2];
-    const learnLang = settings.learnLang;
 
-    // For online words with a sentence pool, pick 1 random sentence with all 3 language translations
-    if (entry._sentencePool && entry._sentencePool.length > 1) {
-        const shuffled = entry._sentencePool.sort(function() { return Math.random() - 0.5; });
-        const picked = shuffled[0];
+    // Initialize _sentencePool and _shownIndices if needed
+    if (!entry._sentencePool) entry._sentencePool = [];
+    if (!entry._shownIndices) entry._shownIndices = [];
+
+    // Try fetching fresh sentences from API to expand the pool
+    if (navigator.onLine && wordKey) {
+        try {
+            const resp = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + wordKey);
+            if (resp.ok) {
+                const data = await resp.json();
+                const apiEntry = data[0];
+                var freshExamples = [];
+                if (apiEntry.meanings) {
+                    for (var m = 0; m < apiEntry.meanings.length; m++) {
+                        var defs = apiEntry.meanings[m].definitions || [];
+                        for (var d = 0; d < defs.length; d++) {
+                            if (defs[d].example && freshExamples.indexOf(defs[d].example) === -1) {
+                                freshExamples.push(defs[d].example);
+                            }
+                        }
+                    }
+                }
+                if (freshExamples.length > 0) {
+                    // Merge new examples into _sentencePool
+                    var addedCount = 0;
+                    for (const ex of freshExamples) {
+                        var exists = false;
+                        for (var e2 = 0; e2 < entry._sentencePool.length; e2++) {
+                            if (entry._sentencePool[e2].en === ex) { exists = true; break; }
+                        }
+                        if (!exists) {
+                            // Translate new sentence
+                            var obj = { en: ex };
+                            for (const tl of transLangs) {
+                                try {
+                                    const tResp = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=' + tl + '&dt=t&q=' + encodeURIComponent(ex));
+                                    const tData = await tResp.json();
+                                    if (tData && tData[0]) {
+                                        obj[tl] = tData[0].map(function(p) { return p[0]; }).join('');
+                                    }
+                                } catch(e) { obj[tl] = ''; }
+                            }
+                            entry._sentencePool.push(obj);
+                            addedCount++;
+                        }
+                    }
+                }
+            }
+        } catch(e) { /* fall back to local pool */ }
+    }
+
+    // Pick an unseen sentence from _sentencePool
+    if (entry._sentencePool.length > 0) {
+        var pool = entry._sentencePool;
+        var shown = entry._shownIndices;
+
+        // Build list of unshown indices
+        var unshown = [];
+        for (var i = 0; i < pool.length; i++) {
+            if (shown.indexOf(i) === -1) unshown.push(i);
+        }
+
+        // If all shown, reset tracking
+        if (unshown.length === 0) {
+            entry._shownIndices = [];
+            shown = [];
+            unshown = [];
+            for (var i2 = 0; i2 < pool.length; i2++) unshown.push(i2);
+        }
+
+        // Pick random from unshown
+        var pickIdx = unshown[Math.floor(Math.random() * unshown.length)];
+        shown.push(pickIdx);
+        var picked = pool[pickIdx];
+
         const sentences = [];
         sentences.push({ lang: 'en', text: picked.en });
         for (const tl of transLangs) {
             if (picked[tl]) sentences.push({ lang: tl, text: picked[tl] });
         }
         entry.sentence = sentences;
+
+        if (containerId === 'learn-sentences') {
+            renderLearnSentences(wordKey, containerId, regenContainerId);
+        } else {
+            renderSentences(wordKey, containerId);
+        }
+        return;
     }
-    // For built-in words with full sentence arrays, rebuild from the full pool
-    else if (entry.sentence && entry.sentence.length > 3) {
+
+    // Final fallback: use built-in sentences
+    const learnLang = settings.learnLang;
+    if (entry.sentence && entry.sentence.length > 3) {
         const allByLang = {};
-        for (var i = 0; i < entry.sentence.length; i++) {
-            allByLang[entry.sentence[i].lang] = entry.sentence[i].text;
+        for (var i3 = 0; i3 < entry.sentence.length; i3++) {
+            allByLang[entry.sentence[i3].lang] = entry.sentence[i3].text;
         }
         const newSentences = [];
         if (allByLang['en']) newSentences.push({ lang: 'en', text: allByLang['en'] });
@@ -1574,12 +1666,12 @@ function regenerateSentences(wordKey, containerId, regenContainerId) {
         entry.sentence = newSentences;
     }
 
-    // Dispatch to the correct renderer
     if (containerId === 'learn-sentences') {
         renderLearnSentences(wordKey, containerId, regenContainerId);
     } else {
         renderSentences(wordKey, containerId);
     }
+}
 }
 
 function saveCurrentWord() {
