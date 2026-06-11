@@ -99,8 +99,7 @@
             <button class="menu-btn" id="btn-test" onclick="doTest()" disabled></button>
             <button class="menu-btn" id="btn-review" onclick="doReview()" disabled></button>
             <button class="menu-btn" id="btn-translate" onclick="doTranslate()" disabled></button>
-            <button class="menu-btn quit-btn" onclick="alert('Close the browser tab to quit.')"></button>
-            <button class="menu-btn" id="btn-debug" style="opacity:0.4;font-size:12px;padding:10px 16px;" onclick="showDebugLog()"></button>
+            <button class="menu-btn quit-btn" id="btn-quit" onclick="window.close() || alert('Please close the browser tab manually.')"></button>
         </div>
     </div>
 
@@ -246,7 +245,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.0.3.0';
+const APP_VERSION = 'v1.0.3.1';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -1061,7 +1060,7 @@ function updateMenuButtons() {
         ? [settings.learnLang, settings.transLang1, settings.transLang2]
         : ['en', 'zh', 'ms'];
     var btnMap = { 'btn-quit': 'btn-quit' };
-    var menuBtns = ['menu-btn-settings', 'menu-btn-create', 'menu-btn-select', 'btn-learn', 'btn-test', 'btn-review', 'btn-translate', 'btn-quit', 'btn-debug'];
+    var menuBtns = ['menu-btn-settings', 'menu-btn-create', 'menu-btn-select', 'btn-learn', 'btn-test', 'btn-review', 'btn-translate', 'btn-quit'];
     for (var mi = 0; mi < menuBtns.length; mi++) {
         var btnId = menuBtns[mi];
         var el = document.getElementById(btnId);
@@ -1759,9 +1758,17 @@ autoRestore();
             }
         }
     } else if (!currentUser) {
-        currentUser = keys[0];
-        localStorage.setItem('el_last_user', keys[0]);
-        console.log('[App] Picked first user:', currentUser);
+        // Try restoring el_last_user before falling back to first user
+        var savedUser;
+        try { savedUser = localStorage.getItem('el_last_user'); } catch(e) {}
+        if (savedUser && getUser(savedUser)) {
+            currentUser = savedUser;
+            console.log('[App] Restored last user:', currentUser);
+        } else {
+            currentUser = keys[0];
+            localStorage.setItem('el_last_user', keys[0]);
+            console.log('[App] Picked first user:', currentUser);
+        }
     }
 })();
 
