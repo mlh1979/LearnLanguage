@@ -211,11 +211,22 @@
     <!-- Test -->
     <div id="test" class="page hidden">
         <div class="status-badge">Test</div>
-        <div id="test-word" class="word-display"></div>
-        <div id="test-answer" class="answer-box hidden"></div>
-        <div id="test-sentences" class="sentence-panel hidden"></div>
-        <div class="btn-row">
-            <button class="action-btn" onclick="showTestAnswer()">Show Answer</button>
+        <div id="test-panels" style="display:none;">
+            <div class="learn-panel">
+                <div class="panel-label">Word</div>
+                <div id="test-words" class="learn-words"></div>
+            </div>
+            <div class="learn-panel">
+                <div class="panel-label">Definitions</div>
+                <div id="test-def" class="learn-def-list"></div>
+            </div>
+            <div class="learn-panel">
+                <div class="panel-label">Sample Sentences</div>
+                <div id="test-sentences" class="learn-sentences-list"></div>
+            </div>
+        </div>
+        <div class="btn-row" id="test-buttons">
+            <button class="action-btn" id="btn-test-show" onclick="showTestAnswer()">Show Answer</button>
         </div>
         <div class="btn-row">
             <button class="action-btn primary" onclick="doTest()">Next Word</button>
@@ -227,12 +238,23 @@
     <div id="review" class="page hidden">
         <div class="status-badge">Review Today</div>
         <div id="review-counter" class="counter"></div>
-        <div id="review-word" class="word-display"></div>
-        <div id="review-answer" class="answer-box hidden"></div>
-        <div id="review-sentences" class="sentence-panel hidden"></div>
         <div id="review-time" class="time-info"></div>
-        <div class="btn-row">
-            <button class="action-btn" onclick="showReviewAnswer()">Show Answer</button>
+        <div id="review-panels" style="display:none;">
+            <div class="learn-panel">
+                <div class="panel-label">Word</div>
+                <div id="review-words" class="learn-words"></div>
+            </div>
+            <div class="learn-panel">
+                <div class="panel-label">Definitions</div>
+                <div id="review-def" class="learn-def-list"></div>
+            </div>
+            <div class="learn-panel">
+                <div class="panel-label">Sample Sentences</div>
+                <div id="review-sentences" class="learn-sentences-list"></div>
+            </div>
+        </div>
+        <div class="btn-row" id="review-buttons">
+            <button class="action-btn" id="btn-review-show" onclick="showReviewAnswer()">Show Answer</button>
         </div>
         <div class="btn-row">
             <button class="action-btn primary" id="btn-review-prev" onclick="reviewPrev()"></button>
@@ -1672,7 +1694,6 @@ async function regenerateSentences(wordKey, containerId, regenContainerId) {
         renderSentences(wordKey, containerId);
     }
 }
-}
 
 function saveCurrentWord() {
     if (currentWord && currentUser) {
@@ -1690,10 +1711,8 @@ function saveAndBack() {
 // Test
 function doTest() {
     showPage('test');
-    document.getElementById('test-answer').classList.add('hidden');
-    document.getElementById('test-answer').innerHTML = '';
-    document.getElementById('test-sentences').classList.add('hidden');
-    document.getElementById('test-sentences').innerHTML = '';
+    document.getElementById('test-panels').style.display = 'none';
+    document.getElementById('btn-test-show').style.display = '';
 
     const userData = getUser(currentUser);
     if (!userData) return;
@@ -1702,29 +1721,44 @@ function doTest() {
     if (!learnedList.length) { showEmpty('No words learned yet.\n还没有学过的单词!'); return; }
     const w = learnedList[Math.floor(Math.random() * learnedList.length)];
     testData = w;
-    document.getElementById('test-word').textContent = w.word.charAt(0).toUpperCase() + w.word.slice(1);
 }
 
 function showTestAnswer() {
-    const a = document.getElementById('test-answer');
-    const settings = getCurrentSettings();
     const entry = DICT[testData.word];
-    let html = '';
-    if (entry && entry.definition) {
-        for (const lang of [settings.learnLang, settings.transLang1, settings.transLang2]) {
-            if (entry.definition[lang]) {
-                var tts = LANGS[lang] ? LANGS[lang].tts : 'en-US';
-                html += `<div><span class="def-lang-label">${LANGS[lang].native}</span> ${escapeHtml(entry.definition[lang])} <button class="def-speak-btn" onclick="speakWord('${escapeHtml(entry.definition[lang]).replace(/'/g, "\\'")}','${tts}')">🔊</button></div>`;
-            }
-        }
-    }
-    a.innerHTML = html;
-    a.classList.remove('hidden');
+    if (!entry) { showEmpty('Word data not found.\n找不到单词数据。'); return; }
+    const settings = getCurrentSettings();
 
-    // Show sentences
-    const panel = document.getElementById('test-sentences');
-    panel.classList.remove('hidden');
+    document.getElementById('btn-test-show').style.display = 'none';
+    document.getElementById('test-panels').style.display = '';
+
+    renderTestWords(entry, settings);
+    renderDefinition(entry, 'test-def', settings);
     renderSentences(testData.word, 'test-sentences');
+}
+
+function renderTestWords(entry, settings) {
+    const container = document.getElementById('test-words');
+    const langs = [settings.learnLang, settings.transLang1, settings.transLang2];
+    let html = '';
+    for (var i = 0; i < langs.length; i++) {
+        const lang = langs[i];
+        const langInfo = LANGS[lang];
+        const tts = langInfo ? langInfo.tts : 'en-US';
+        var wordText;
+        if (i === 0) {
+            wordText = testData.word.charAt(0).toUpperCase() + testData.word.slice(1);
+        } else {
+            wordText = (entry.translations && entry.translations[lang]) ||
+                       (entry.definition && entry.definition[lang]) ||
+                       testData.word;
+        }
+        var escaped = escapeHtmlForAttr(wordText);
+        html += '<div class="learn-word-card">' +
+            '<span class="learn-word-text' + (i === 0 ? ' primary' : '') + '">' + escapeHtml(wordText) + '</span>' +
+            '<button class="learn-word-tts" onclick="speakWord(\'' + escaped + '\',\'' + tts + '\')">🔊</button>' +
+            '</div>';
+    }
+    container.innerHTML = html;
 }
 
 // Review
@@ -1734,7 +1768,7 @@ function doReview() {
     const settings = getCurrentSettings();
     const today = new Date().toISOString().slice(0, 10);
     const learnedList = userData.words[settings.learnLang] || [];
-    reviewWords = learnedList.filter(w => (w.date || '').startsWith(today));
+    reviewWords = learnedList.filter(function(w) { return (w.date || '').startsWith(today); });
     if (!reviewWords.length) { showEmpty('No words learned today.\n今天没有学过的单词。'); return; }
     reviewIndex = 0;
     showPage('review');
@@ -1743,13 +1777,10 @@ function doReview() {
 
 function showReviewWord() {
     const w = reviewWords[reviewIndex];
-    document.getElementById('review-counter').textContent = `${reviewIndex + 1} / ${reviewWords.length}`;
-    document.getElementById('review-word').textContent = w.word.charAt(0).toUpperCase() + w.word.slice(1);
-    document.getElementById('review-answer').classList.add('hidden');
-    document.getElementById('review-answer').innerHTML = '';
-    document.getElementById('review-sentences').classList.add('hidden');
-    document.getElementById('review-sentences').innerHTML = '';
-    document.getElementById('review-time').textContent = `Learned at: ${w.date}`;
+    document.getElementById('review-counter').textContent = (reviewIndex + 1) + ' / ' + reviewWords.length;
+    document.getElementById('review-panels').style.display = 'none';
+    document.getElementById('btn-review-show').style.display = '';
+    document.getElementById('review-time').textContent = 'Learned at: ' + w.date;
     reviewData = w;
     // Render review button labels based on current settings
     const settings = getCurrentSettings();
@@ -1771,26 +1802,42 @@ function showReviewWord() {
 }
 
 function showReviewAnswer() {
-    const a = document.getElementById('review-answer');
-    const settings = getCurrentSettings();
     const entry = DICT[reviewData.word];
-    let html = '';
-    if (entry && entry.definition) {
-        for (const lang of [settings.learnLang, settings.transLang1, settings.transLang2]) {
-            if (entry.definition[lang]) {
-                var tts = LANGS[lang] ? LANGS[lang].tts : 'en-US';
-                html += `<div><span class="def-lang-label">${LANGS[lang].native}</span> ${escapeHtml(entry.definition[lang])} <button class="def-speak-btn" onclick="speakWord('${escapeHtml(entry.definition[lang]).replace(/'/g, "\\'")}','${tts}')">🔊</button></div>`;
-            }
-        }
-    }
-    a.innerHTML = html;
-    a.classList.remove('hidden');
+    if (!entry) { showEmpty('Word data not found.\n找不到单词数据。'); return; }
+    const settings = getCurrentSettings();
 
-    // Show sentences
-    const panel = document.getElementById('review-sentences');
-    panel.classList.remove('hidden');
+    document.getElementById('btn-review-show').style.display = 'none';
+    document.getElementById('review-panels').style.display = '';
+
+    renderReviewWords(entry, settings);
+    renderDefinition(entry, 'review-def', settings);
     _sentenceShuffle['review-sentences'] = null;
     renderSentences(reviewData.word, 'review-sentences');
+}
+
+function renderReviewWords(entry, settings) {
+    const container = document.getElementById('review-words');
+    const langs = [settings.learnLang, settings.transLang1, settings.transLang2];
+    let html = '';
+    for (var i = 0; i < langs.length; i++) {
+        const lang = langs[i];
+        const langInfo = LANGS[lang];
+        const tts = langInfo ? langInfo.tts : 'en-US';
+        var wordText;
+        if (i === 0) {
+            wordText = reviewData.word.charAt(0).toUpperCase() + reviewData.word.slice(1);
+        } else {
+            wordText = (entry.translations && entry.translations[lang]) ||
+                       (entry.definition && entry.definition[lang]) ||
+                       reviewData.word;
+        }
+        var escaped = escapeHtmlForAttr(wordText);
+        html += '<div class="learn-word-card">' +
+            '<span class="learn-word-text' + (i === 0 ? ' primary' : '') + '">' + escapeHtml(wordText) + '</span>' +
+            '<button class="learn-word-tts" onclick="speakWord(\'' + escaped + '\',\'' + tts + '\')">🔊</button>' +
+            '</div>';
+    }
+    container.innerHTML = html;
 }
 
 function reviewNext() {
