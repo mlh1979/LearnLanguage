@@ -1,10 +1,10 @@
-const CACHE_NAME = 'el-cache-v20';
-const FILES = ['./index.html', './manifest.json'];
+const CACHE_NAME = 'el-cache-v22';
+const CACHE_FILES = ['./index.html', './manifest.json', './dict.json', './dict-lang-zh.json', './dict-lang-ms.json'];
 
 self.addEventListener('install', function(e) {
     e.waitUntil(
         caches.open(CACHE_NAME).then(function(cache) {
-            return cache.addAll(FILES);
+            return cache.addAll(CACHE_FILES);
         }).then(function() {
             return self.skipWaiting();
         })
