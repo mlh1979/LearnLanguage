@@ -324,7 +324,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.1.2.0';
+const APP_VERSION = 'v1.1.3.0';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -369,20 +369,36 @@ var DICT = {};
 
 // Load main dictionary: try localStorage first (instant), then fetch from network
 async function loadDictJSON() {
+    var cachedVersion = null;
     // 1. Try localStorage cache (instant)
     try {
         var cached = localStorage.getItem('el_dict_data');
         if (cached) {
-            DICT = JSON.parse(cached);
+            var parsed = JSON.parse(cached);
+            DICT = parsed;
+            cachedVersion = parsed._version || null;
             logEvent('Loaded dict from localStorage: ' + Object.keys(DICT).length + ' words');
         }
     } catch(e) {}
 
-    // 2. Fetch from network in background (check for updates)
+    // 2. Fetch from network to check for updates
     try {
         var resp = await fetch('./dict.json?t=' + Date.now());
         if (resp.ok) {
             var fresh = await resp.json();
+            var freshVersion = fresh._version || null;
+            // If version changed or first load, reload everything
+            if (freshVersion && freshVersion !== cachedVersion) {
+                logEvent('Dict version changed: ' + cachedVersion + ' -> ' + freshVersion);
+                // Clear old language pack caches
+                try {
+                    var allLangs = ['zh', 'zhTW', 'ms', 'ta', 'ja', 'ko', 'th', 'vi', 'id', 'es', 'fr', 'de', 'ar', 'ru', 'pt', 'it', 'nl'];
+                    for (var i = 0; i < allLangs.length; i++) {
+                        localStorage.removeItem('el_dict_cached_' + allLangs[i]);
+                        localStorage.removeItem('el_lang_loaded_' + allLangs[i]);
+                    }
+                } catch(e) {}
+            }
             DICT = fresh;
             // Save to localStorage for next time
             try { localStorage.setItem('el_dict_data', JSON.stringify(fresh)); } catch(e) {}
