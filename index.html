@@ -486,7 +486,10 @@ const DEFAULT_SETTINGS = { learnLang: 'en', transLang1: 'zh', transLang2: 'ms' }
 
 function getCurrentSettings() {
     const u = getUser(currentUser);
-    return (u && u.settings) ? u.settings : DEFAULT_SETTINGS;
+    if (u && u.settings) {
+        return { ...DEFAULT_SETTINGS, ...u.settings };
+    }
+    return DEFAULT_SETTINGS;
 }
 
 function saveSettings(s) {
@@ -589,8 +592,8 @@ function importUser(event) {
                 data.words = migrated;
             }
             if (!data.words) data.words = {};
+            data.settings = { ...DEFAULT_SETTINGS, ...data.settings };
             const u = getUsers();
-            if (!data.settings) data.settings = { ...DEFAULT_SETTINGS };
             u[data.name] = data;
             saveUsers(u);
             currentUser = data.name;
