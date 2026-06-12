@@ -325,7 +325,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.1.5.0';
+const APP_VERSION = 'v1.1.6.0';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -1600,8 +1600,11 @@ updateMenuButtons();
 
 // Load dictionary and default language packs from JSON files
 (async function initDict() {
+    // Must load dict FIRST, because it replaces DICT entirely.
+    // ensureLangPack merges into DICT, so it must run after.
+    await loadDictJSON();
     var settings = getCurrentSettings();
-    var promises = [loadDictJSON()];
+    var promises = [];
     if (settings.transLang1) promises.push(ensureLangPack(settings.transLang1));
     if (settings.transLang2) promises.push(ensureLangPack(settings.transLang2));
     await Promise.all(promises);
