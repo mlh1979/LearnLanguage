@@ -947,12 +947,90 @@ function renderLearnWords(entry, settings) {
 }
 
 // Panel 3: Sentences for learn page (no word row, separate regen button)
-function renderLearnSentences(wordKey, listId, regenId) {
+async function renderLearnSentences(wordKey, listId, regenId) {
     const entry = DICT[wordKey];
     const listEl = document.getElementById(listId);
     const regenEl = document.getElementById(regenId);
     if (!entry) { listEl.innerHTML = ''; regenEl.innerHTML = ''; return; }
     const settings = getCurrentSettings();
+
+    // Auto-fetch sentences from API if none exist
+    if (!entry.sentence || entry.sentence.length === 0) {
+        try {
+            await fetchSentencesForWord(wordKey, entry);
+        } catch(e) {
+            listEl.innerHTML = '<div class="sentence-text" style="color:#999;">No sentences available.</div>';
+            regenEl.innerHTML = '';
+            return;
+        }
+    }
+
+    renderSentenceList(entry, wordKey, listId, regenId, settings);
+}
+
+// Fetch sentences from Dictionary API and translate them
+async function fetchSentencesForWord(wordKey, entry) {
+    if (!navigator.onLine) return;
+    const resp = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + wordKey);
+    if (!resp.ok) throw new Error('API fetch failed');
+    const data = await resp.json();
+    if (!data[0] || !data[0].meanings) throw new Error('No meanings');
+
+    var examples = [];
+    for (var m = 0; m < data[0].meanings.length; m++) {
+        var defs = data[0].meanings[m].definitions || [];
+        for (var d = 0; d < defs.length; d++) {
+            if (defs[d].example && examples.indexOf(defs[d].example) === -1) {
+                examples.push(defs[d].example);
+            }
+        }
+    }
+    if (examples.length === 0) throw new Error('No examples');
+
+    // Initialize _sentencePool if needed
+    if (!entry._sentencePool) entry._sentencePool = [];
+
+    // Fetch fresh examples and translate
+    for (const ex of examples) {
+        var exists = false;
+        for (var e2 = 0; e2 < entry._sentencePool.length; e2++) {
+            if (entry._sentencePool[e2].en === ex) { exists = true; break; }
+        }
+        if (!exists) {
+            var obj = { en: ex };
+            const settings = getCurrentSettings();
+            const transLangs = [settings.transLang1, settings.transLang2];
+            for (const tl of transLangs) {
+                try {
+                    const tResp = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=' + tl + '&dt=t&q=' + encodeURIComponent(ex));
+                    const tData = await tResp.json();
+                    if (tData && tData[0]) {
+                        obj[tl] = tData[0].map(function(p) { return p[0]; }).join('');
+                    }
+                } catch(e) { obj[tl] = ''; }
+            }
+            entry._sentencePool.push(obj);
+        }
+    }
+
+    // Pick first example for sentence display
+    var picked = entry._sentencePool[0];
+    if (picked) {
+        const sentences = [];
+        sentences.push({ lang: 'en', text: picked.en });
+        const settings = getCurrentSettings();
+        const transLangs = [settings.transLang1, settings.transLang2];
+        for (const tl of transLangs) {
+            if (picked[tl]) sentences.push({ lang: tl, text: picked[tl] });
+        }
+        entry.sentence = sentences;
+    }
+}
+
+// Render sentence list from existing sentence data
+function renderSentenceList(entry, wordKey, listId, regenId, settings) {
+    const listEl = document.getElementById(listId);
+    const regenEl = document.getElementById(regenId);
 
     const order = [settings.learnLang, settings.transLang1, settings.transLang2];
     const allLangs = Object.keys(LANGS);
@@ -987,11 +1065,17 @@ function renderDefinition(entry, containerId, settings) {
     let html = '';
     for (const lang of langs) {
         var text = '';
-        // Use definition translation if available, fallback to English definition
+        // Use definition translation if available
         if (entry.definition && entry.definition[lang]) {
             text = entry.definition[lang];
         } else if (lang !== settings.learnLang && entry.definition && entry.definition[settings.learnLang]) {
-            text = entry.definition[settings.learnLang];
+            // Fallback: show word translation + English definition
+            var wordTrans = entry.translations && entry.translations[lang];
+            if (wordTrans) {
+                text = wordTrans + ' — ' + entry.definition[settings.learnLang];
+            } else {
+                text = entry.definition[settings.learnLang];
+            }
         }
         if (text) {
             var tts = LANGS[lang] ? LANGS[lang].tts : 'en-US';

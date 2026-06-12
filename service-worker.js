@@ -1,5 +1,14 @@
-const CACHE_NAME = 'el-cache-v22';
-const CACHE_FILES = ['./index.html', './manifest.json', './dict.json', './dict-lang-zh.json', './dict-lang-ms.json'];
+const CACHE_NAME = 'el-cache-v23';
+const CACHE_FILES = [
+    './index.html', './manifest.json',
+    './dict.json',
+    './dict-lang-zh.json', './dict-lang-zhTW.json', './dict-lang-ms.json',
+    './dict-lang-ta.json', './dict-lang-ja.json', './dict-lang-ko.json',
+    './dict-lang-th.json', './dict-lang-vi.json', './dict-lang-id.json',
+    './dict-lang-es.json', './dict-lang-fr.json', './dict-lang-de.json',
+    './dict-lang-ar.json', './dict-lang-ru.json', './dict-lang-pt.json',
+    './dict-lang-it.json', './dict-lang-nl.json'
+];
 
 self.addEventListener('install', function(e) {
     e.waitUntil(
