@@ -325,7 +325,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.1.4.0';
+const APP_VERSION = 'v1.1.5.0';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -1095,12 +1095,23 @@ function escapeHtmlForAttr(str) {
 }
 
 // Shared sentence renderer
-function renderSentences(wordKey, containerId) {
+async function renderSentences(wordKey, containerId) {
     const entry = DICT[wordKey];
     if (!entry) { document.getElementById(containerId).innerHTML = ''; return; }
     const settings = getCurrentSettings();
     const learnLang = settings.learnLang;
     const container = document.getElementById(containerId);
+
+    // Auto-fetch sentences from API if none exist
+    if (!entry.sentence || entry.sentence.length === 0) {
+        try {
+            await fetchSentencesForWord(wordKey, entry);
+        } catch(e) {
+            // If fetch fails, show empty state
+            container.innerHTML = '<div class="sentence-text" style="color:#999;">No sentences available.</div>';
+            return;
+        }
+    }
 
     // Display sentences in language priority order: learnLang, transLang1, transLang2
     const order = [learnLang, settings.transLang1, settings.transLang2];

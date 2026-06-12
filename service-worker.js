@@ -1,4 +1,4 @@
-const CACHE_NAME = 'el-cache-v23';
+const CACHE_NAME = 'el-cache-v24';
 const CACHE_FILES = [
     './index.html', './manifest.json',
     './dict.json',
