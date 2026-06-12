@@ -324,7 +324,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.1.1.0';
+const APP_VERSION = 'v1.1.2.0';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -1515,10 +1515,18 @@ function doTest() {
     document.getElementById('test-word-main').textContent = w.word.charAt(0).toUpperCase() + w.word.slice(1);
 }
 
-function showTestAnswer() {
-    const entry = DICT[testData.word];
-    if (!entry) { showEmpty('Word data not found.\n找不到单词数据。'); return; }
+async function showTestAnswer() {
+    var entry = DICT[testData.word];
     const settings = getCurrentSettings();
+
+    // If word not in DICT, fetch from API
+    if (!entry && navigator.onLine) {
+        document.getElementById('btn-test-show').textContent = 'Loading...';
+        entry = await fetchWordForTest(testData.word);
+        document.getElementById('btn-test-show').textContent = 'Show Answer';
+    }
+
+    if (!entry) { showEmpty('Word data not found.\n找不到单词数据。'); return; }
 
     document.getElementById('btn-test-show').style.display = 'none';
     document.getElementById('test-panels').style.display = '';
@@ -1526,6 +1534,21 @@ function showTestAnswer() {
     renderTestWords(entry, settings);
     renderDefinition(entry, 'test-def', settings);
     renderSentences(testData.word, 'test-sentences');
+}
+
+async function fetchWordForTest(word) {
+    try {
+        const def = await fetchWordDefinition(word);
+        if (def) {
+            DICT[word] = {
+                definition: { en: def },
+                sentence: [],
+                translations: {}
+            };
+            return DICT[word];
+        }
+    } catch(e) {}
+    return null;
 }
 
 function renderTestWords(entry, settings) {
@@ -1587,10 +1610,18 @@ function showReviewWord() {
     document.getElementById('btn-review-prev').disabled = reviewIndex === 0;
 }
 
-function showReviewAnswer() {
-    const entry = DICT[reviewData.word];
-    if (!entry) { showEmpty('Word data not found.\n找不到单词数据。'); return; }
+async function showReviewAnswer() {
+    var entry = DICT[reviewData.word];
     const settings = getCurrentSettings();
+
+    // If word not in DICT, fetch from API
+    if (!entry && navigator.onLine) {
+        document.getElementById('btn-review-show').textContent = 'Loading...';
+        entry = await fetchWordForTest(reviewData.word);
+        document.getElementById('btn-review-show').textContent = 'Show Answer';
+    }
+
+    if (!entry) { showEmpty('Word data not found.\n找不到单词数据。'); return; }
 
     document.getElementById('btn-review-show').style.display = 'none';
     document.getElementById('review-panels').style.display = '';
