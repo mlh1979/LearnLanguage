@@ -325,7 +325,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.1.7.0';
+const APP_VERSION = 'v1.1.8.0';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -791,11 +791,29 @@ function deleteUserAction(name) {
 
 // Clear all dictionary words
 function clearDict() {
-    if (!confirm('Clear all dictionary words? You will need internet to load new words.\n\n清除所有词库？需要联网才能加载新词。')) return;
-    var keys = Object.keys(DICT);
-    for (var i = 0; i < keys.length; i++) { delete DICT[keys[i]]; }
+    if (!confirm('Clear dictionary cache and re-download from server?\n\n清除词库缓存并重新从服务器下载？')) return;
+    // Clear localStorage caches
+    localStorage.removeItem('el_dict_data');
     localStorage.removeItem('el_cached_words');
-    alert('Dictionary cleared.\n词库已清除。');
+    var allLangs = ['zh', 'zhTW', 'ms', 'ta', 'ja', 'ko', 'th', 'vi', 'id', 'es', 'fr', 'de', 'ar', 'ru', 'pt', 'it', 'nl'];
+    for (var i = 0; i < allLangs.length; i++) {
+        localStorage.removeItem('el_dict_cached_' + allLangs[i]);
+        localStorage.removeItem('el_lang_loaded_' + allLangs[i]);
+    }
+    // Clear in-memory dictionary
+    var keys = Object.keys(DICT);
+    for (var j = 0; j < keys.length; j++) { delete DICT[keys[j]]; }
+    // Re-download from server
+    (async function() {
+        await loadDictJSON();
+        var settings = getCurrentSettings();
+        var promises = [];
+        if (settings.transLang1) promises.push(ensureLangPack(settings.transLang1));
+        if (settings.transLang2) promises.push(ensureLangPack(settings.transLang2));
+        await Promise.all(promises);
+        logEvent('Dictionary re-downloaded: ' + Object.keys(DICT).length + ' words');
+        alert('Dictionary cache cleared and re-downloaded.\n词库缓存已清除并重新下载。');
+    })();
 }
 
 // Reset current user profile (clear learned words, keep settings)
