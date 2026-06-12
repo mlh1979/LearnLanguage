@@ -81,18 +81,20 @@
         /* Learn page panels */
         .learn-panel { background: #f8f9fa; border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid #e9ecef; }
         .word-panel { text-align: center; padding: 20px 16px; background: linear-gradient(135deg, #f0f4ff, #f8f9fa); }
-        .word-display-main { font-size: 36px; font-weight: 700; color: #4a6cf7; }
+        .word-display-main { font-size: 36px; font-weight: 700; color: #4a6cf7; display: flex; align-items: center; justify-content: center; gap: 12px; }
+        .word-speak-btn { background: none; border: none; cursor: pointer; font-size: 22px; padding: 4px; opacity: 0.7; }
+        .word-speak-btn:hover { opacity: 1; }
         .panel-label { font-size: 11px; color: #6366f1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
         .learn-words { display: flex; flex-direction: column; gap: 10px; }
         .learn-word-card { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: 10px; padding: 12px 16px; border: 1px solid #e0e0e0; }
-        .learn-word-text { font-size: 22px; font-weight: 700; color: #1a1a2e; flex: 1; }
-        .learn-word-text.primary { font-size: 28px; color: #4a6cf7; }
-        .learn-word-tts { background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px 8px; opacity: 0.7; flex-shrink: 0; }
+        .learn-word-text { font-size: 16px; font-weight: 700; color: #1a1a2e; flex: 1; }
+        .learn-word-text.primary { font-size: 20px; color: #4a6cf7; }
+        .learn-word-tts { background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px 8px; opacity: 0.7; flex-shrink: 0; }
         .learn-word-tts:hover { opacity: 1; }
         .learn-def-list { display: flex; flex-direction: column; gap: 8px; }
         .learn-sentences-list { display: flex; flex-direction: column; gap: 6px; }
         .learn-regenerate-row { text-align: center; margin-top: 12px; }
-        @media (max-width: 480px) { #app { max-width: 100%; } .word-display { font-size: 28px; } .action-btn { min-width: 100px; padding: 10px 16px; font-size: 14px; } .learn-word-text { font-size: 18px; } .learn-word-text.primary { font-size: 22px; } .learn-panel { padding: 12px; } .word-display-main { font-size: 28px; } }
+        @media (max-width: 480px) { #app { max-width: 100%; } .word-display { font-size: 28px; } .action-btn { min-width: 100px; padding: 10px 16px; font-size: 14px; } .learn-word-text { font-size: 14px; } .learn-word-text.primary { font-size: 18px; } .learn-panel { padding: 12px; } .word-display-main { font-size: 28px; } }
     </style>
 </head>
 <body>
@@ -904,11 +906,18 @@ function loadFromDict(learned) {
     renderLearnPage();
 }
 
+// Render Panel 0 word with speaker button
+function renderWordPanel(containerId, word) {
+    var display = word.charAt(0).toUpperCase() + word.slice(1);
+    var escaped = escapeHtmlForAttr(display);
+    document.getElementById(containerId).innerHTML = display + ' <button class="word-speak-btn" onclick="speakWord(\'' + escaped + '\',\'en-US\')">🔊</button>';
+}
+
 function renderLearnPage() {
     const entry = DICT[currentWord];
     if (!entry) return;
     const settings = getCurrentSettings();
-    document.getElementById('learn-word-main').textContent = currentWord.charAt(0).toUpperCase() + currentWord.slice(1);
+    renderWordPanel('learn-word-main', currentWord);
     renderLearnWords(entry, settings);
     renderDefinition(entry, 'learn-def', settings);
     renderLearnSentences(currentWord, 'learn-sentences', 'learn-regenerate');
@@ -1186,7 +1195,7 @@ function doTest() {
     if (!learnedList.length) { showEmpty('No words learned yet.\n还没有学过的单词!'); return; }
     const w = learnedList[Math.floor(Math.random() * learnedList.length)];
     testData = w;
-    document.getElementById('test-word-main').textContent = w.word.charAt(0).toUpperCase() + w.word.slice(1);
+    renderWordPanel('test-word-main', w.word);
 }
 
 async function showTestAnswer() {
@@ -1263,7 +1272,7 @@ function showReviewWord() {
     document.getElementById('review-panels').style.display = 'none';
     document.getElementById('btn-review-show').style.display = '';
     document.getElementById('review-time').textContent = 'Learned at: ' + w.date;
-    document.getElementById('review-word-main').textContent = w.word.charAt(0).toUpperCase() + w.word.slice(1);
+    renderWordPanel('review-word-main', w.word);
     reviewData = w;
     // Render review button labels based on current settings
     const settings = getCurrentSettings();
