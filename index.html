@@ -325,7 +325,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.1.6.0';
+const APP_VERSION = 'v1.1.7.0';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -1065,7 +1065,7 @@ function renderDefinition(entry, containerId, settings) {
     let html = '';
     for (const lang of langs) {
         var text = '';
-        // Use definition translation if available
+        // Use definition translation if available (pre-translated or cached)
         if (entry.definition && entry.definition[lang]) {
             text = entry.definition[lang];
         } else if (lang !== settings.learnLang && entry.definition && entry.definition[settings.learnLang]) {
@@ -1083,6 +1083,32 @@ function renderDefinition(entry, containerId, settings) {
         }
     }
     container.innerHTML = html;
+
+    // Translate missing definition translations on-the-fly
+    for (const lang of langs) {
+        if (lang !== settings.learnLang && entry.definition && entry.definition[settings.learnLang] && !entry.definition[lang]) {
+            translateDefinition(entry, lang, containerId);
+        }
+    }
+}
+
+async function translateDefinition(entry, lang, containerId) {
+    if (entry.definition[lang]) return;
+
+    var s = getCurrentSettings();
+    var sourceText = entry.definition[s.learnLang] || entry.definition.en;
+    if (!sourceText) return;
+
+    try {
+        const resp = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=' + lang + '&dt=t&q=' + encodeURIComponent(sourceText));
+        const data = await resp.json();
+        if (data && data[0]) {
+            var translated = data[0].map(function(p) { return p[0]; }).join('');
+            entry.definition[lang] = translated;
+            // Re-render with updated definition
+            renderDefinition(entry, containerId, getCurrentSettings());
+        }
+    } catch(e) {}
 }
 
 function escapeHtml(str) {
