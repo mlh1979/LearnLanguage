@@ -324,7 +324,7 @@
 
 <script>
 // ========= VERSION =========
-const APP_VERSION = 'v1.1.0.0';
+const APP_VERSION = 'v1.1.1.0';
 document.title = 'Learn Language (' + APP_VERSION + ')';
 // ============================
 
@@ -367,25 +367,58 @@ const MENU_LABELS = {
 // Dictionary loaded from external JSON files
 var DICT = {};
 
-// Load main dictionary (English definitions)
+// Load main dictionary: try localStorage first (instant), then fetch from network
 async function loadDictJSON() {
+    // 1. Try localStorage cache (instant)
     try {
-        var resp = await fetch('./dict.json');
-        if (resp.ok) {
-            DICT = await resp.json();
-            logEvent('Loaded dict.json: ' + Object.keys(DICT).length + ' words');
-            return true;
+        var cached = localStorage.getItem('el_dict_data');
+        if (cached) {
+            DICT = JSON.parse(cached);
+            logEvent('Loaded dict from localStorage: ' + Object.keys(DICT).length + ' words');
         }
     } catch(e) {}
-    logEvent('Failed to load dict.json, using fallback DICT');
-    return false;
+
+    // 2. Fetch from network in background (check for updates)
+    try {
+        var resp = await fetch('./dict.json?t=' + Date.now());
+        if (resp.ok) {
+            var fresh = await resp.json();
+            DICT = fresh;
+            // Save to localStorage for next time
+            try { localStorage.setItem('el_dict_data', JSON.stringify(fresh)); } catch(e) {}
+            logEvent('Fetched dict.json: ' + Object.keys(DICT).length + ' words');
+        }
+    } catch(e) {}
+    return Object.keys(DICT).length > 0;
 }
 
-// Load language pack from JSON file and merge into DICT
+// Load language pack: try localStorage first, then fetch from network
 async function loadLangPackFile(lang) {
     if (!lang) return;
+    // 1. Try localStorage cache
+    var loadedKey = 'el_lang_loaded_' + lang;
+    if (isLangPackLoaded(lang)) return; // already loaded this session
+
     try {
-        var resp = await fetch('./dict-lang-' + lang + '.json');
+        var cached = localStorage.getItem('el_dict_cached_' + lang);
+        if (cached) {
+            var pack = JSON.parse(cached);
+            var keys = Object.keys(pack);
+            for (var i = 0; i < keys.length; i++) {
+                var word = keys[i];
+                if (DICT[word]) {
+                    if (!DICT[word].translations) DICT[word].translations = {};
+                    DICT[word].translations[lang] = pack[word];
+                }
+            }
+            logEvent('Loaded lang ' + lang + ' from localStorage: ' + keys.length + ' translations');
+            markLangPackLoaded(lang);
+        }
+    } catch(e) {}
+
+    // 2. Fetch from network
+    try {
+        var resp = await fetch('./dict-lang-' + lang + '.json?t=' + Date.now());
         if (resp.ok) {
             var pack = await resp.json();
             var keys = Object.keys(pack);
@@ -396,8 +429,10 @@ async function loadLangPackFile(lang) {
                     DICT[word].translations[lang] = pack[word];
                 }
             }
-            logEvent('Loaded dict-lang-' + lang + '.json: ' + keys.length + ' translations');
-            return true;
+            // Cache to localStorage
+            try { localStorage.setItem('el_dict_cached_' + lang, JSON.stringify(pack)); } catch(e) {}
+            markLangPackLoaded(lang);
+            logEvent('Fetched lang ' + lang + '.json: ' + keys.length + ' translations');
         }
     } catch(e) {
         logEvent('Failed to load dict-lang-' + lang + '.json');
@@ -802,13 +837,31 @@ function doLearn() {
     const learnedList = userData.words[settings.learnLang] || [];
     const learned = new Set(learnedList.map(w => w.word));
 
+    // Try DICT first (fast - no API calls needed)
+    var fromDict = pickFromDict(learned);
+    if (fromDict) {
+        currentWord = fromDict;
+        renderLearnPage();
+        return;
+    }
+
+    // DICT exhausted, fetch from API
     if (navigator.onLine) {
-        // Online: fetch fresh word from API, refresh cache in background
         fetchAndShowOnlineWord(learned);
     } else {
-        // Offline: use cached words from localStorage
         loadFromCache(learned);
     }
+}
+
+// Pick a random word from DICT that hasn't been learned yet
+function pickFromDict(learned) {
+    var keys = Object.keys(DICT);
+    var available = [];
+    for (var i = 0; i < keys.length; i++) {
+        if (!learned.has(keys[i])) available.push(keys[i]);
+    }
+    if (available.length === 0) return null;
+    return available[Math.floor(Math.random() * available.length)];
 }
 
 // Helper: fetch English definition from Dictionary API
@@ -1250,9 +1303,16 @@ function renderDefinition(entry, containerId, settings) {
     const langs = [settings.learnLang, settings.transLang1, settings.transLang2];
     let html = '';
     for (const lang of langs) {
+        var text = '';
+        // Use definition translation if available, fallback to English definition
         if (entry.definition && entry.definition[lang]) {
+            text = entry.definition[lang];
+        } else if (lang !== settings.learnLang && entry.definition && entry.definition[settings.learnLang]) {
+            text = entry.definition[settings.learnLang];
+        }
+        if (text) {
             var tts = LANGS[lang] ? LANGS[lang].tts : 'en-US';
-            html += `<div class="definition-line"><span class="def-lang-label">${LANGS[lang].native}</span>${escapeHtml(entry.definition[lang])} <button class="def-speak-btn" onclick="speakWord('${escapeHtml(entry.definition[lang]).replace(/'/g, "\\'")}','${tts}')">🔊</button></div>`;
+            html += `<div class="definition-line"><span class="def-lang-label">${LANGS[lang].native}</span>${escapeHtml(text)} <button class="def-speak-btn" onclick="speakWord('${escapeHtml(text).replace(/'/g, "\\'")}','${tts}')">🔊</button></div>`;
         }
     }
     container.innerHTML = html;
